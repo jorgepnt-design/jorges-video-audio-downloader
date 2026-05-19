@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { FlagIcon } from "./FlagIcon";
 import { matchService } from "../services/matchService";
+import { teamService } from "../services/teamService";
 import type { Match, Prediction } from "../types";
 
 interface Props {
@@ -11,6 +13,8 @@ interface Props {
 export function PredictionForm({ match, prediction, onSave }: Props) {
   const [scoreA, setScoreA] = useState(prediction?.scoreA ?? 0);
   const [scoreB, setScoreB] = useState(prediction?.scoreB ?? 0);
+  const teamA = teamService.getTeamById(match.teamAId);
+  const teamB = teamService.getTeamById(match.teamBId);
 
   return (
     <form
@@ -21,7 +25,7 @@ export function PredictionForm({ match, prediction, onSave }: Props) {
       }}
     >
       <label className="text-sm text-white/65">
-        {matchService.getTeamDisplayLabel(match.teamAId)}
+        <span className="inline-flex items-center gap-2">{teamA && <FlagIcon team={teamA} />} {matchService.getTeamLabel(match.teamAId)}</span>
         <input
           type="number"
           min="0"
@@ -32,7 +36,7 @@ export function PredictionForm({ match, prediction, onSave }: Props) {
         />
       </label>
       <label className="text-sm text-white/65">
-        {matchService.getTeamDisplayLabel(match.teamBId)}
+        <span className="inline-flex items-center gap-2">{teamB && <FlagIcon team={teamB} />} {matchService.getTeamLabel(match.teamBId)}</span>
         <input
           type="number"
           min="0"

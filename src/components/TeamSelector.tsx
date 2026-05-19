@@ -1,6 +1,7 @@
 import { Search, Star, Users, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { Group, Team } from "../types";
+import { FlagIcon } from "./FlagIcon";
 import { TeamSquadPanel } from "./TeamSquadPanel";
 
 interface Props {
@@ -49,7 +50,7 @@ export function TeamSelector({ groups, teams, favoriteTeams, favoriteIds, maxFav
                 onClick={() => onToggle(team.id)}
                 className="inline-flex items-center gap-2 rounded-md border border-gold/40 bg-gold/15 px-3 py-2 text-sm font-bold text-gold"
               >
-                <span>{team.flag}</span>
+                <FlagIcon team={team} />
                 {team.name}
                 <X size={15} aria-hidden />
               </button>
@@ -92,7 +93,7 @@ export function TeamSelector({ groups, teams, favoriteTeams, favoriteIds, maxFav
                     }`}
                   >
                     <span>
-                      <span className="block text-3xl">{team.flag}</span>
+                      <span className="block"><FlagIcon team={team} className="h-8 w-11" /></span>
                       <span className="mt-2 block font-bold">{team.name}</span>
                       <span className={`text-xs ${selected ? "text-night/65" : "text-white/50"}`}>{team.fifaCode}</span>
                     </span>

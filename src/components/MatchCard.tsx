@@ -1,5 +1,7 @@
 import { MapPin, Star } from "lucide-react";
+import { FlagIcon } from "./FlagIcon";
 import { matchService } from "../services/matchService";
+import { teamService } from "../services/teamService";
 import type { Match, Prediction } from "../types";
 import { formatLocalDate, formatLocalTime, formatUtcTime } from "../utils/date";
 
@@ -20,6 +22,8 @@ const statusLabel = {
 
 export function MatchCard({ match, isFavorite, prediction, timezone, children }: Props) {
   const enriched = matchService.enrich(match);
+  const teamA = teamService.getTeamById(match.teamAId);
+  const teamB = teamService.getTeamById(match.teamBId);
 
   return (
     <article
@@ -43,14 +47,14 @@ export function MatchCard({ match, isFavorite, prediction, timezone, children }:
       </div>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
         <p className="inline-flex items-center gap-2 text-lg font-black">
-          <span>{enriched.teamAFlag}</span>
+          {teamA ? <FlagIcon team={teamA} /> : <span>{enriched.teamAFlag}</span>}
           {enriched.teamAName}
         </p>
         <div className="rounded-md bg-night px-3 py-2 text-center font-black">
           {match.scoreA === null ? "-" : match.scoreA} : {match.scoreB === null ? "-" : match.scoreB}
         </div>
         <p className="inline-flex items-center justify-end gap-2 text-right text-lg font-black">
-          <span>{enriched.teamBFlag}</span>
+          {teamB ? <FlagIcon team={teamB} /> : <span>{enriched.teamBFlag}</span>}
           {enriched.teamBName}
         </p>
       </div>

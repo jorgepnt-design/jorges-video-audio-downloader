@@ -3,11 +3,13 @@ import type { PageId } from "../components/Navigation";
 import { CalendarExportButton } from "../components/CalendarExportButton";
 import { CountdownCard } from "../components/CountdownCard";
 import { FavoriteTeams } from "../components/FavoriteTeams";
+import { FlagIcon } from "../components/FlagIcon";
 import { LiveUpdateButton } from "../components/LiveUpdateButton";
 import { PWAInstallPrompt } from "../components/PWAInstallPrompt";
 import { StatsPanel } from "../components/StatsPanel";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import { matchService } from "../services/matchService";
+import { teamService } from "../services/teamService";
 import type { Match, Prediction, Team, UserSettings } from "../types";
 import { formatLocalDate, formatLocalTime } from "../utils/date";
 
@@ -22,6 +24,8 @@ interface Props {
 
 export function Dashboard({ favoriteTeams, favoriteMatches, nextFavoriteMatch, predictions, settings, onNavigate }: Props) {
   const online = useOnlineStatus();
+  const nextTeamA = nextFavoriteMatch ? teamService.getTeamById(nextFavoriteMatch.teamAId) : undefined;
+  const nextTeamB = nextFavoriteMatch ? teamService.getTeamById(nextFavoriteMatch.teamBId) : undefined;
 
   return (
     <div className="space-y-6">
@@ -61,7 +65,13 @@ export function Dashboard({ favoriteTeams, favoriteMatches, nextFavoriteMatch, p
               {nextFavoriteMatch ? (
                 <>
                   <h2 className="mt-3 text-2xl font-black">
-                    {matchService.getTeamDisplayLabel(nextFavoriteMatch.teamAId)} vs {matchService.getTeamDisplayLabel(nextFavoriteMatch.teamBId)}
+                    <span className="inline-flex flex-wrap items-center gap-2">
+                      {nextTeamA && <FlagIcon team={nextTeamA} className="h-6 w-9" />}
+                      {matchService.getTeamLabel(nextFavoriteMatch.teamAId)}
+                      <span>vs</span>
+                      {nextTeamB && <FlagIcon team={nextTeamB} className="h-6 w-9" />}
+                      {matchService.getTeamLabel(nextFavoriteMatch.teamBId)}
+                    </span>
                   </h2>
                   <p className="mt-2 text-white/65">
                     {formatLocalDate(nextFavoriteMatch.dateUtc, settings.timezone)} · {formatLocalTime(nextFavoriteMatch.dateUtc, settings.timezone)} ·{" "}

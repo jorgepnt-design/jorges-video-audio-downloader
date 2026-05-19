@@ -1,6 +1,7 @@
 import { Star } from "lucide-react";
 import { standings } from "../data/standings";
 import type { Group, Team } from "../types";
+import { FlagIcon } from "./FlagIcon";
 
 interface Props {
   groups: Group[];
@@ -38,7 +39,7 @@ export function GroupTable({ groups, teams, favoriteIds }: Props) {
                   return (
                     <tr key={team.id} className={favorite ? "bg-gold/15 text-gold" : "border-t border-white/5"}>
                       <td className="px-4 py-3 font-bold">
-                        <span className="mr-2">{team.flag}</span>
+                        <span className="mr-2 inline-flex align-middle"><FlagIcon team={team} /></span>
                         {team.name}
                         {favorite && <Star className="ml-2 inline" size={15} fill="currentColor" aria-hidden />}
                       </td>

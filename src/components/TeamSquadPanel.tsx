@@ -1,6 +1,7 @@
 import { Info, Shirt, Users, X } from "lucide-react";
 import type { PlayerPosition, Team } from "../types";
 import { teamService } from "../services/teamService";
+import { FlagIcon } from "./FlagIcon";
 
 interface Props {
   team: Team;
@@ -26,7 +27,7 @@ export function TeamSquadPanel({ team, onClose }: Props) {
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-gold">{team.groupName}</p>
           <h3 className="mt-1 text-2xl font-black">
-            <span className="mr-2">{team.flag}</span>
+            <span className="mr-2 inline-flex align-middle"><FlagIcon team={team} className="h-6 w-9" /></span>
             {team.name}
           </h3>
           <p className="mt-2 text-sm text-white/60">{squad?.note}</p>

@@ -1,5 +1,7 @@
 import { CalendarCheck, ListTodo, Star, Trophy } from "lucide-react";
+import { FlagIcon } from "./FlagIcon";
 import { matchService } from "../services/matchService";
+import { teamService } from "../services/teamService";
 import type { Match, Prediction, Team } from "../types";
 import { formatLocalDate, formatLocalTime } from "../utils/date";
 
@@ -13,6 +15,8 @@ interface Props {
 export function StatsPanel({ favoriteTeams, favoriteMatches, nextFavoriteMatch, predictions }: Props) {
   const groupMatches = favoriteMatches.filter((match) => match.round === "Gruppenphase").length;
   const knockoutMatches = favoriteMatches.filter((match) => match.round !== "Gruppenphase").length;
+  const nextTeamA = nextFavoriteMatch ? teamService.getTeamById(nextFavoriteMatch.teamAId) : undefined;
+  const nextTeamB = nextFavoriteMatch ? teamService.getTeamById(nextFavoriteMatch.teamBId) : undefined;
   const stats = [
     { label: "Favoriten", value: favoriteTeams.length, icon: Star },
     { label: "Meine Spiele", value: favoriteMatches.length, icon: CalendarCheck },
@@ -33,7 +37,14 @@ export function StatsPanel({ favoriteTeams, favoriteMatches, nextFavoriteMatch, 
         <p className="text-sm font-semibold uppercase tracking-wide text-gold">Nächstes Favoriten-Spiel</p>
         {nextFavoriteMatch ? (
           <p className="mt-2 text-lg font-bold">
-            {matchService.getTeamDisplayLabel(nextFavoriteMatch.teamAId)} vs {matchService.getTeamDisplayLabel(nextFavoriteMatch.teamBId)} ·{" "}
+            <span className="inline-flex flex-wrap items-center gap-2">
+              {nextTeamA && <FlagIcon team={nextTeamA} />}
+              {matchService.getTeamLabel(nextFavoriteMatch.teamAId)}
+              <span>vs</span>
+              {nextTeamB && <FlagIcon team={nextTeamB} />}
+              {matchService.getTeamLabel(nextFavoriteMatch.teamBId)}
+            </span>{" "}
+            ·{" "}
             {formatLocalDate(nextFavoriteMatch.dateUtc)} · {formatLocalTime(nextFavoriteMatch.dateUtc)}
           </p>
         ) : (
