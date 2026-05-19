@@ -2,20 +2,20 @@
   "name": "WM 2026 Companion",
   "short_name": "WM Companion",
   "description": "Personalisierter Spielplan, Favoriten, Tipps und Kalenderexport für die WM 2026.",
-  "start_url": "/",
+  "start_url": "/wm-2026-companion/",
   "display": "standalone",
   "background_color": "#081633",
   "theme_color": "#081633",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icons/icon-192.svg",
+      "src": "icons/icon-192.svg",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512.svg",
+      "src": "icons/icon-512.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"

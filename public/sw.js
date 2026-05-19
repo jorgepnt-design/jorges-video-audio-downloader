@@ -1,5 +1,6 @@
-const CACHE_NAME = "wm-2026-companion-v7";
-const STATIC_ASSETS = ["/", "/index.html", "/offline.html", "/manifest.json", "/icons/icon-192.svg", "/icons/icon-512.svg"];
+const CACHE_NAME = "wm-2026-companion-v8";
+const BASE_PATH = "/wm-2026-companion/";
+const STATIC_ASSETS = [BASE_PATH, `${BASE_PATH}index.html`, `${BASE_PATH}offline.html`, `${BASE_PATH}manifest.json`, `${BASE_PATH}icons/icon-192.svg`, `${BASE_PATH}icons/icon-512.svg`];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)));
@@ -18,7 +19,7 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   if (event.request.mode === "navigate") {
-    event.respondWith(fetch(event.request).catch(() => caches.match("/offline.html")));
+    event.respondWith(fetch(event.request).catch(() => caches.match(`${BASE_PATH}offline.html`)));
     return;
   }
   event.respondWith(
@@ -30,7 +31,7 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           return response;
         })
-        .catch(() => caches.match("/offline.html"));
+        .catch(() => caches.match(`${BASE_PATH}offline.html`));
     }),
   );
 });
