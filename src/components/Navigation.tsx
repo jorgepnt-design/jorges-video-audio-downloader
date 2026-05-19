@@ -57,9 +57,10 @@ export function Navigation({ current, onNavigate }: Props) {
             </button>
           ))}
         </div>
-        <div className="mt-8 rounded-md border border-gold/30 bg-gold/10 p-3 text-sm text-white/75">
+        <div className="mt-6 rounded-md border border-gold/30 bg-gold/10 p-3 text-sm text-white/75">
           <Bell className="mb-2 text-gold" size={20} aria-hidden />
-          Offline-first, lokal gespeichert und bereit für spätere Live-Synchronisierung.
+          <p className="font-bold text-white">Offline nutzbar</p>
+          <p className="mt-1 text-xs leading-relaxed text-white/60">Favoriten und Tipps werden lokal gespeichert.</p>
         </div>
       </aside>
     </>
