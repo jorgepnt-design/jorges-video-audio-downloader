@@ -1,4 +1,4 @@
-const CACHE_NAME = "wm-2026-companion-v10";
+const CACHE_NAME = "wm-2026-companion-v11";
 const BASE_PATH = "/wm-2026-companion/";
 const STATIC_ASSETS = [BASE_PATH, `${BASE_PATH}index.html`, `${BASE_PATH}offline.html`, `${BASE_PATH}manifest.json`, `${BASE_PATH}icons/icon-192.svg`, `${BASE_PATH}icons/icon-512.svg`];
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Layout } from "./components/Layout";
+import { LiveDataAutoRefresh } from "./components/LiveDataAutoRefresh";
 import type { PageId } from "./components/Navigation";
 import { useFavorites } from "./hooks/useFavorites";
 import { useMatches } from "./hooks/useMatches";
@@ -23,6 +24,7 @@ export default function App() {
 
   return (
     <Layout page={page} onNavigate={setPage}>
+      <LiveDataAutoRefresh />
       {page === "dashboard" && (
         <Dashboard
           favoriteTeams={favoriteTeams}

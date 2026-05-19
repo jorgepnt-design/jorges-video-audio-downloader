@@ -2,6 +2,7 @@ import { groups } from "../data/groups";
 import { lineups, squads } from "../data/squads";
 import { teams } from "../data/teams";
 import type { Group, GroupId, Team, TeamLineup, TeamSquad } from "../types";
+import { liveDataService } from "./liveDataService";
 
 export const teamService = {
   getTeams(): Team[] {
@@ -20,9 +21,9 @@ export const teamService = {
     return this.getTeamById(teamId)?.name ?? teamId;
   },
   getSquad(teamId: string): TeamSquad | undefined {
-    return squads.find((squad) => squad.teamId === teamId);
+    return liveDataService.getSquad(teamId) ?? squads.find((squad) => squad.teamId === teamId);
   },
   getLineup(teamId: string): TeamLineup | undefined {
-    return lineups.find((lineup) => lineup.teamId === teamId);
+    return liveDataService.getLineup(teamId) ?? lineups.find((lineup) => lineup.teamId === teamId);
   },
 };

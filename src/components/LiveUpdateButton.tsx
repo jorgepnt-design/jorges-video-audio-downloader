@@ -2,7 +2,7 @@ import { RefreshCcw } from "lucide-react";
 import { useLiveScores } from "../hooks/useLiveScores";
 
 export function LiveUpdateButton() {
-  const { lastUpdate, isUpdating, refreshLiveData } = useLiveScores();
+  const { lastUpdate, isUpdating, error, refreshLiveData } = useLiveScores();
   return (
     <div className="flex flex-wrap items-center gap-3">
       <button
@@ -13,7 +13,12 @@ export function LiveUpdateButton() {
         <RefreshCcw className={isUpdating ? "animate-spin" : ""} size={18} aria-hidden />
         Live-Daten aktualisieren
       </button>
-      {lastUpdate && <span className="text-sm text-white/55">Mock aktualisiert: {new Date(lastUpdate.updatedAt).toLocaleTimeString("de-DE")}</span>}
+      {lastUpdate && (
+        <span className="text-sm text-white/55">
+          Automatisch geprüft: {new Date(lastUpdate.updatedAt).toLocaleTimeString("de-DE")} · {lastUpdate.source === "api" ? "API" : "Mock"}
+        </span>
+      )}
+      {error && <span className="text-sm text-red-100">{error}</span>}
     </div>
   );
 }

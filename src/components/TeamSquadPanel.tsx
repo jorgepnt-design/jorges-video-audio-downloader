@@ -1,6 +1,7 @@
 import { Info, Shirt, Users, X } from "lucide-react";
-import type { PlayerPosition, Team } from "../types";
+import { useEffect, useState } from "react";
 import { teamService } from "../services/teamService";
+import type { PlayerPosition, Team } from "../types";
 import { FlagIcon } from "./FlagIcon";
 
 interface Props {
@@ -18,8 +19,15 @@ const positionLabels: Record<PlayerPosition, string> = {
 const positions: PlayerPosition[] = ["GK", "DEF", "MID", "FWD"];
 
 export function TeamSquadPanel({ team, onClose }: Props) {
+  const [, setLiveVersion] = useState(0);
   const squad = teamService.getSquad(team.id);
   const lineup = teamService.getLineup(team.id);
+
+  useEffect(() => {
+    const update = () => setLiveVersion((version) => version + 1);
+    window.addEventListener("wm2026:live-data-updated", update);
+    return () => window.removeEventListener("wm2026:live-data-updated", update);
+  }, []);
 
   return (
     <section className="rounded-lg border border-gold/30 bg-night/95 p-4 shadow-glow">
@@ -27,7 +35,9 @@ export function TeamSquadPanel({ team, onClose }: Props) {
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-gold">{team.groupName}</p>
           <h3 className="mt-1 text-2xl font-black">
-            <span className="mr-2 inline-flex align-middle"><FlagIcon team={team} className="h-6 w-9" /></span>
+            <span className="mr-2 inline-flex align-middle">
+              <FlagIcon team={team} className="h-6 w-9" />
+            </span>
             {team.name}
           </h3>
           <p className="mt-2 text-sm text-white/60">{squad?.note}</p>
@@ -55,7 +65,10 @@ export function TeamSquadPanel({ team, onClose }: Props) {
           )}
           <div className="mt-3 flex items-start gap-2 rounded-md border border-gold/20 bg-gold/10 p-3 text-sm text-gold">
             <Info className="mt-0.5 shrink-0" size={16} aria-hidden />
-            <p>Status: {lineup?.status === "official" ? "Offiziell" : lineup?.status === "provisional" ? "Vorläufig" : "Mock-Daten"}</p>
+            <p>
+              Status: {lineup?.status === "official" ? "Offiziell" : lineup?.status === "provisional" ? "Vorläufig" : "Mock-Daten"}
+              {lineup?.updatedAt ? ` · geprüft ${new Date(lineup.updatedAt).toLocaleTimeString("de-DE")}` : ""}
+            </p>
           </div>
         </div>
 
