@@ -1,0 +1,89 @@
+import { Info, Shirt, Users, X } from "lucide-react";
+import type { PlayerPosition, Team } from "../types";
+import { teamService } from "../services/teamService";
+
+interface Props {
+  team: Team;
+  onClose: () => void;
+}
+
+const positionLabels: Record<PlayerPosition, string> = {
+  GK: "Tor",
+  DEF: "Abwehr",
+  MID: "Mittelfeld",
+  FWD: "Angriff",
+};
+
+const positions: PlayerPosition[] = ["GK", "DEF", "MID", "FWD"];
+
+export function TeamSquadPanel({ team, onClose }: Props) {
+  const squad = teamService.getSquad(team.id);
+  const lineup = teamService.getLineup(team.id);
+
+  return (
+    <section className="rounded-lg border border-gold/30 bg-night/95 p-4 shadow-glow">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-gold">{team.groupName}</p>
+          <h3 className="mt-1 text-2xl font-black">
+            <span className="mr-2">{team.flag}</span>
+            {team.name}
+          </h3>
+          <p className="mt-2 text-sm text-white/60">{squad?.note}</p>
+        </div>
+        <button type="button" onClick={onClose} className="rounded-md border border-white/10 bg-white/10 p-2 text-white hover:bg-white/15" aria-label="Kader schließen">
+          <X size={18} aria-hidden />
+        </button>
+      </div>
+
+      <div className="mt-4 grid gap-3 lg:grid-cols-[0.85fr_1.15fr]">
+        <div className="rounded-lg border border-white/10 bg-white/7 p-4">
+          <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-gold">
+            <Shirt size={16} aria-hidden /> Aufstellung
+          </p>
+          {lineup?.formation ? (
+            <div className="mt-3">
+              <p className="text-3xl font-black">{lineup.formation}</p>
+              <p className="mt-2 text-sm text-white/60">Startelf und Bank sind für dieses Team hinterlegt.</p>
+            </div>
+          ) : (
+            <div className="mt-3 rounded-md border border-white/10 bg-white/8 p-3">
+              <p className="font-bold">Noch nicht offiziell bekannt</p>
+              <p className="mt-1 text-sm text-white/60">{lineup?.note}</p>
+            </div>
+          )}
+          <div className="mt-3 flex items-start gap-2 rounded-md border border-gold/20 bg-gold/10 p-3 text-sm text-gold">
+            <Info className="mt-0.5 shrink-0" size={16} aria-hidden />
+            <p>Status: {lineup?.status === "official" ? "Offiziell" : lineup?.status === "provisional" ? "Vorläufig" : "Mock-Daten"}</p>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-white/10 bg-white/7 p-4">
+          <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-gold">
+            <Users size={16} aria-hidden /> Kader
+          </p>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            {positions.map((position) => (
+              <div key={position} className="rounded-md border border-white/10 bg-night/70 p-3">
+                <p className="mb-2 text-sm font-bold text-white/70">{positionLabels[position]}</p>
+                <div className="space-y-2">
+                  {squad?.players
+                    .filter((player) => player.position === position)
+                    .map((player) => (
+                      <div key={player.id} className="flex items-center justify-between gap-3 rounded-md bg-white/7 px-3 py-2 text-sm">
+                        <span className="font-semibold">
+                          <span className="mr-2 text-gold">#{player.shirtNumber}</span>
+                          {player.name}
+                        </span>
+                        <span className="text-xs text-white/45">{player.club}</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
