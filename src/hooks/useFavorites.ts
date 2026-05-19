@@ -8,9 +8,22 @@ const KEY = "favorites";
 const VERSION_KEY = "favorites-data-version";
 const FAVORITES_DATA_VERSION = "wm2026-mock-v2";
 const MAX_FAVORITES = 8;
+const REQUIRED_FAVORITE_TEAM_IDS = ["por"];
 
-const normalizeFavorites = (favorites: Favorite[]) =>
-  favorites.filter((favorite, index, all) => teamService.getTeamById(favorite.teamId) && all.findIndex((item) => item.teamId === favorite.teamId) === index).slice(0, MAX_FAVORITES);
+const createFavorite = (teamId: string): Favorite => ({
+  id: crypto.randomUUID(),
+  userId: localUser.id,
+  teamId,
+  createdAt: new Date().toISOString(),
+});
+
+const normalizeFavorites = (favorites: Favorite[]) => {
+  const unique = favorites.filter(
+    (favorite, index, all) => teamService.getTeamById(favorite.teamId) && all.findIndex((item) => item.teamId === favorite.teamId) === index,
+  );
+  const withRequired = [...REQUIRED_FAVORITE_TEAM_IDS.filter((teamId) => !unique.some((favorite) => favorite.teamId === teamId)).map(createFavorite), ...unique];
+  return withRequired.slice(0, MAX_FAVORITES);
+};
 
 export const useFavorites = () => {
   const [favorites, setFavorites] = useState<Favorite[]>(() => {
@@ -33,6 +46,7 @@ export const useFavorites = () => {
   const toggleFavorite = (teamId: string) => {
     setFavorites((current) => {
       const exists = current.some((favorite) => favorite.teamId === teamId);
+      if (REQUIRED_FAVORITE_TEAM_IDS.includes(teamId) && exists) return current;
       if (!exists && current.length >= MAX_FAVORITES) return current;
       const next = exists
         ? current.filter((favorite) => favorite.teamId !== teamId)
@@ -44,9 +58,10 @@ export const useFavorites = () => {
   };
 
   const resetFavorites = () => {
-    storageService.remove(KEY);
     storageService.set(VERSION_KEY, FAVORITES_DATA_VERSION);
-    setFavorites([]);
+    const normalized = normalizeFavorites([]);
+    storageService.set(KEY, normalized);
+    setFavorites(normalized);
   };
 
   return {
