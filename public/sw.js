@@ -1,6 +1,15 @@
-const CACHE_NAME = "wm-2026-companion-v12";
+const CACHE_NAME = "wm-2026-companion-v13";
 const BASE_PATH = "/wm-2026-companion/";
-const STATIC_ASSETS = [BASE_PATH, `${BASE_PATH}index.html`, `${BASE_PATH}offline.html`, `${BASE_PATH}manifest.json`, `${BASE_PATH}icons/icon-192.svg`, `${BASE_PATH}icons/icon-512.svg`];
+const STATIC_ASSETS = [
+  BASE_PATH,
+  `${BASE_PATH}index.html`,
+  `${BASE_PATH}offline.html`,
+  `${BASE_PATH}manifest.json`,
+  `${BASE_PATH}icons/apple-touch-icon.png`,
+  `${BASE_PATH}icons/icon-192.png`,
+  `${BASE_PATH}icons/icon-512.png`,
+  `${BASE_PATH}icons/icon-1024.png`,
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)));
