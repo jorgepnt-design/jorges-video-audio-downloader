@@ -2,13 +2,12 @@ import { MapPin, Star } from "lucide-react";
 import { FlagIcon } from "./FlagIcon";
 import { matchService } from "../services/matchService";
 import { teamService } from "../services/teamService";
-import type { Match, Prediction } from "../types";
+import type { Match } from "../types";
 import { formatLocalDate, formatLocalTime, formatUtcTime } from "../utils/date";
 
 interface Props {
   match: Match;
   isFavorite: boolean;
-  prediction?: Prediction;
   timezone: string;
   children?: React.ReactNode;
 }
@@ -20,7 +19,7 @@ const statusLabel = {
   postponed: "Verschoben",
 };
 
-export function MatchCard({ match, isFavorite, prediction, timezone, children }: Props) {
+export function MatchCard({ match, isFavorite, timezone, children }: Props) {
   const enriched = matchService.enrich(match);
   const teamA = teamService.getTeamById(match.teamAId);
   const teamB = teamService.getTeamById(match.teamBId);
@@ -62,9 +61,11 @@ export function MatchCard({ match, isFavorite, prediction, timezone, children }:
         <span className="flex items-center gap-1">
           <MapPin size={16} aria-hidden /> {match.stadium}, {match.city}
         </span>
-        <span className="flex items-center gap-1">
-          {isFavorite && <Star size={16} fill="currentColor" aria-hidden />} {prediction ? "Tipp gespeichert" : "Noch kein Tipp"}
-        </span>
+        {isFavorite && (
+          <span className="flex items-center gap-1 text-gold">
+            <Star size={16} fill="currentColor" aria-hidden /> Meine Teams
+          </span>
+        )}
       </div>
       {children && <div className="mt-4 border-t border-white/10 pt-4">{children}</div>}
     </article>

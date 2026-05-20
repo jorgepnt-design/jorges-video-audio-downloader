@@ -1,17 +1,17 @@
 # Jorge´s WM-Planer 2026
 
-Moderne, responsive React-PWA für einen personalisierten Spielplan zur Fußball-WM 2026. Die erste Version läuft vollständig lokal mit Mock-Daten: Favoriten, Tipps, Einstellungen und Kalenderexport funktionieren ohne API-Keys.
+Moderne, responsive React-PWA für einen personalisierten Spielplan zur Fußball-WM 2026. Die erste Version läuft vollständig lokal mit Mock-Daten: Favoriten, Einstellungen und Kalenderexport funktionieren ohne API-Keys.
 
 ## Funktionen
 
 - Auswahl von bis zu 8 Lieblingsmannschaften aus 48 Mock-Teams in 12 Gruppen
+- Portugal ist automatisch als Favorit gesetzt
 - Kader- und Aufstellungsbereich pro Mannschaft mit Platz für offizielle Spieler, Formation, Startelf und Bank
 - Personalisierter Spielplan mit Favoriten-Hervorhebung und lokaler Zeitzone
 - Filter nach Runde, Gruppe, Datum und Team-Suche
-- Statistikbereich mit Favoriten, Lieblingsspielen, Gruppenspielen und Tipps
+- Statistikbereich mit Favoriten, Lieblingsspielen und Gruppenspielen
 - `.ics`-Export für Google Calendar, Apple Calendar und Outlook
 - Gruppenübersicht mit Tabellenstruktur für spätere echte Stände
-- Lokales Tippspiel mit gespeicherten Ergebnistipps
 - PWA mit Manifest, Service Worker, Icons und Offline-Fallback
 - Services und Typen für spätere Auth-, Cloud-, Live-API- und Push-Anbindung
 
@@ -90,12 +90,9 @@ Vorgesehene Tabellen oder Collections:
 - `teams`
 - `matches`
 - `favorites`
-- `predictions`
 - `groups`
 - `standings`
 - `notification_settings`
-- `prediction_leagues`
-- `prediction_league_members`
 
 Empfohlene Integrationspunkte:
 
@@ -103,14 +100,13 @@ Empfohlene Integrationspunkte:
 - `src/services/storageService.ts` für Cloud-Speicherung statt `localStorage`
 - `src/services/footballApi.ts` für Live-Ergebnisse und Tabellen
 - `src/services/notificationService.ts` für Web Push oder Firebase Cloud Messaging
-- `src/services/predictionService.ts` für Gruppen, Ranglisten und Punktewertung
 - `src/services/syncService.ts` für spätere Cloud- und Realtime-Synchronisierung
 
 ## Deployment
 
-Das Projekt ist GitHub-kompatibel und kann später auf Vercel, Netlify, Firebase Hosting oder Supabase Hosting deployt werden. Für Vercel und Netlify reicht typischerweise:
+Das Projekt ist GitHub-kompatibel und kann auf GitHub Pages, Vercel, Netlify, Firebase Hosting oder Supabase Hosting deployt werden. Für Vercel und Netlify reicht typischerweise:
 
 - Build command: `npm run build`
 - Publish directory: `dist`
 
-Die App verwendet keine geschützten FIFA-Logos oder offiziellen Markenassets. Icons sind einfache Platzhalter.
+Die App verwendet keine geschützten FIFA-Logos oder offiziellen Markenassets. Das App-Icon liegt lokal unter `public/icons/`.

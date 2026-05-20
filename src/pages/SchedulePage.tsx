@@ -3,7 +3,7 @@ import { LiveUpdateButton } from "../components/LiveUpdateButton";
 import { MatchFilters } from "../components/MatchFilters";
 import { MySchedule } from "../components/MySchedule";
 import { SectionHeader } from "../components/SectionHeader";
-import type { Group, Match, MatchFiltersState, Prediction, Team, UserSettings } from "../types";
+import type { Group, Match, MatchFiltersState, Team, UserSettings } from "../types";
 
 interface Props {
   groups: Group[];
@@ -11,13 +11,12 @@ interface Props {
   allMatches: Match[];
   favoriteMatches: Match[];
   favoriteTeams: Team[];
-  predictions: Prediction[];
   settings: UserSettings;
   filters: MatchFiltersState;
   setFilters: React.Dispatch<React.SetStateAction<MatchFiltersState>>;
 }
 
-export function SchedulePage({ groups, matches, allMatches, favoriteMatches, favoriteTeams, predictions, settings, filters, setFilters }: Props) {
+export function SchedulePage({ groups, matches, allMatches, favoriteMatches, favoriteTeams, settings, filters, setFilters }: Props) {
   return (
     <>
       <SectionHeader eyebrow="Mein Spielplan" title="Alle Spiele, persönlich gefiltert" description="Favoriten werden hervorgehoben, Zeiten werden in deine lokale Zeitzone umgerechnet." />
@@ -27,7 +26,7 @@ export function SchedulePage({ groups, matches, allMatches, favoriteMatches, fav
         <LiveUpdateButton />
       </div>
       <MatchFilters groups={groups} filters={filters} setFilters={setFilters} />
-      <MySchedule matches={matches} favoriteTeams={favoriteTeams} predictions={predictions} settings={settings} />
+      <MySchedule matches={matches} favoriteTeams={favoriteTeams} settings={settings} />
     </>
   );
 }

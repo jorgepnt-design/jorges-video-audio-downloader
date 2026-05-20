@@ -1,13 +1,12 @@
-import { BarChart3, Bell, CalendarDays, Home, ListChecks, Settings, Shield } from "lucide-react";
+import { BarChart3, Bell, CalendarDays, Home, Settings, Shield } from "lucide-react";
 
-export type PageId = "dashboard" | "teams" | "schedule" | "groups" | "predictions" | "settings";
+export type PageId = "dashboard" | "teams" | "schedule" | "groups" | "settings";
 
 const items = [
   { id: "dashboard", label: "Dashboard", icon: Home },
   { id: "teams", label: "Teams", icon: Shield },
   { id: "schedule", label: "Spielplan", icon: CalendarDays },
   { id: "groups", label: "Gruppen", icon: BarChart3 },
-  { id: "predictions", label: "Tipps", icon: ListChecks },
   { id: "settings", label: "Settings", icon: Settings },
 ] as const;
 
@@ -20,7 +19,7 @@ export function Navigation({ current, onNavigate }: Props) {
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-night/95 backdrop-blur md:hidden safe-bottom">
-        <div className="grid grid-cols-6 gap-1 px-2 pt-2">
+        <div className="grid grid-cols-5 gap-1 px-2 pt-2">
           {items.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -60,7 +59,7 @@ export function Navigation({ current, onNavigate }: Props) {
         <div className="mt-6 rounded-md border border-gold/30 bg-gold/10 p-3 text-sm text-white/75">
           <Bell className="mb-2 text-gold" size={20} aria-hidden />
           <p className="font-bold text-white">Offline nutzbar</p>
-          <p className="mt-1 text-xs leading-relaxed text-white/60">Favoriten und Tipps werden lokal gespeichert.</p>
+          <p className="mt-1 text-xs leading-relaxed text-white/60">Favoriten und Einstellungen werden lokal gespeichert.</p>
         </div>
       </aside>
     </>

@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarDays, Shield, Sparkles } from "lucide-react";
+import { CalendarDays, Shield, Sparkles } from "lucide-react";
 import type { PageId } from "../components/Navigation";
 import { CalendarExportButton } from "../components/CalendarExportButton";
 import { CountdownCard } from "../components/CountdownCard";
@@ -10,19 +10,18 @@ import { StatsPanel } from "../components/StatsPanel";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import { matchService } from "../services/matchService";
 import { teamService } from "../services/teamService";
-import type { Match, Prediction, Team, UserSettings } from "../types";
+import type { Match, Team, UserSettings } from "../types";
 import { formatLocalDate, formatLocalTime } from "../utils/date";
 
 interface Props {
   favoriteTeams: Team[];
   favoriteMatches: Match[];
   nextFavoriteMatch?: Match;
-  predictions: Prediction[];
   settings: UserSettings;
   onNavigate: (page: PageId) => void;
 }
 
-export function Dashboard({ favoriteTeams, favoriteMatches, nextFavoriteMatch, predictions, settings, onNavigate }: Props) {
+export function Dashboard({ favoriteTeams, favoriteMatches, nextFavoriteMatch, settings, onNavigate }: Props) {
   const online = useOnlineStatus();
   const nextTeamA = nextFavoriteMatch ? teamService.getTeamById(nextFavoriteMatch.teamAId) : undefined;
   const nextTeamB = nextFavoriteMatch ? teamService.getTeamById(nextFavoriteMatch.teamBId) : undefined;
@@ -31,7 +30,7 @@ export function Dashboard({ favoriteTeams, favoriteMatches, nextFavoriteMatch, p
     <div className="space-y-6">
       {!online && (
         <div className="rounded-lg border border-gold/30 bg-gold/10 px-4 py-3 text-sm font-semibold text-gold">
-          Offline-Modus aktiv. Favoriten, Tipps und Spielplan bleiben lokal verfügbar.
+          Offline-Modus aktiv. Favoriten, Einstellungen und Spielplan bleiben lokal verfügbar.
         </div>
       )}
 
@@ -44,7 +43,7 @@ export function Dashboard({ favoriteTeams, favoriteMatches, nextFavoriteMatch, p
             </p>
             <h1 className="max-w-3xl text-4xl font-black leading-tight md:text-6xl">Dein persönlicher WM 2026 Spielplan</h1>
             <p className="mt-4 max-w-2xl text-base text-white/70 md:text-lg">
-              Favoriten wählen, Spiele verfolgen, Tipps speichern und deine Termine als Kalender exportieren. Lokal startklar, später bereit für Login,
+              Favoriten wählen, Spiele verfolgen und deine Termine als Kalender exportieren. Lokal startklar, später bereit für Login,
               Cloud-Sync und Live-Daten.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
@@ -87,16 +86,13 @@ export function Dashboard({ favoriteTeams, favoriteMatches, nextFavoriteMatch, p
         </div>
       </section>
 
-      <StatsPanel favoriteTeams={favoriteTeams} favoriteMatches={favoriteMatches} nextFavoriteMatch={nextFavoriteMatch} predictions={predictions} />
+      <StatsPanel favoriteTeams={favoriteTeams} favoriteMatches={favoriteMatches} nextFavoriteMatch={nextFavoriteMatch} />
 
-      <section className="grid gap-4 lg:grid-cols-[1fr_auto]">
+      <section className="grid gap-4">
         <div className="rounded-lg border border-white/10 bg-white/7 p-4">
           <h3 className="mb-3 text-xl font-black">Favoriten</h3>
           <FavoriteTeams teams={favoriteTeams} />
         </div>
-        <button type="button" onClick={() => onNavigate("predictions")} className="flex items-center justify-center gap-2 rounded-lg border border-gold/30 bg-gold/10 px-5 py-4 font-bold text-gold">
-          Zu den Tipps <ArrowRight size={18} aria-hidden />
-        </button>
       </section>
 
       <LiveUpdateButton />

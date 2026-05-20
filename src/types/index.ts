@@ -138,33 +138,6 @@ export interface Standing {
   points: number;
 }
 
-export interface Prediction {
-  id: string;
-  userId: string;
-  matchId: string;
-  scoreA: number;
-  scoreB: number;
-  points: number | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PredictionLeague {
-  id: string;
-  name: string;
-  ownerId: string;
-  inviteCode: string;
-  createdAt: string;
-}
-
-export interface PredictionLeagueMember {
-  id: string;
-  leagueId: string;
-  userId: string;
-  role: "owner" | "admin" | "member";
-  joinedAt: string;
-}
-
 export interface MatchFiltersState {
   round: Round | "Alle Spiele" | "Nur meine Teams";
   search: string;

@@ -1,7 +1,7 @@
 {
   "name": "Jorge´s WM-Planer 2026",
   "short_name": "Jorge´s WM",
-  "description": "Personalisierter Spielplan, Favoriten, Tipps und Kalenderexport für die WM 2026.",
+  "description": "Personalisierter Spielplan, Favoriten und Kalenderexport für die WM 2026.",
   "start_url": "/wm-2026-companion/",
   "display": "standalone",
   "background_color": "#081633",

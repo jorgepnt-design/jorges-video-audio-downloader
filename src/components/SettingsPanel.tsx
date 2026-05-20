@@ -1,8 +1,7 @@
-import type { UserSettings } from "../types";
+import type { Match, UserSettings } from "../types";
 import { storageService } from "../services/storageService";
 import { CalendarExportButton } from "./CalendarExportButton";
 import { NotificationSettings } from "./NotificationSettings";
-import type { Match } from "../types";
 
 interface Props {
   settings: UserSettings;
@@ -35,7 +34,7 @@ export function SettingsPanel({ settings, onChange, calendarMatches }: Props) {
       <NotificationSettings settings={settings} onChange={onChange} />
       <section className="rounded-lg border border-white/10 bg-white/7 p-4 lg:col-span-2">
         <h3 className="text-xl font-black">Daten & Cloud-Vorbereitung</h3>
-        <p className="mt-2 text-white/65">Aktuell arbeitet die App lokal. Auth, Cloud-Speicherung, Tippspiel-Gruppen und Realtime-Sync sind als Services vorbereitet.</p>
+        <p className="mt-2 text-white/65">Aktuell arbeitet die App lokal. Auth, Cloud-Speicherung und Realtime-Sync sind als Services vorbereitet.</p>
         <button type="button" onClick={() => { storageService.clearLocalUserData(); window.location.reload(); }} className="mt-4 rounded-md bg-ember px-4 py-3 font-bold text-white">
           Lokale Daten zurücksetzen
         </button>
