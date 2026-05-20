@@ -72,7 +72,7 @@ Aktuelle Daten liegen zentral in:
 
 Diese Dateien sind als `MOCK_DATA` / `TODO_OFFICIAL_DATA` markiert. Sobald finale oder lizenzierte Daten verfügbar sind, können diese Dateien oder die Services ersetzt werden. Die UI arbeitet gegen `teamService`, `groupService`, `matchService` und `footballApi`, nicht direkt gegen externe Anbieter.
 
-Wichtig für die aktuelle Mock-Version: Gruppe K enthält Portugal, DR Congo, Uzbekistan und Colombia. Alle Gruppen A bis L enthalten exakt 4 Teams, insgesamt also 48 Teams. Kader und Aufstellungen sind bewusst als Mock-Daten markiert, bis offizielle Spielerlisten und Startaufstellungen bekannt sind.
+Wichtig für die aktuelle Mock-Version: Gruppe K enthält Portugal, DR Kongo, Usbekistan und Kolumbien. Alle Gruppen A bis L enthalten exakt 4 Teams, insgesamt also 48 Teams. Kader und Aufstellungen sind bewusst als Mock-Daten markiert, bis offizielle Spielerlisten und Startaufstellungen bekannt sind.
 
 ## Spätere Supabase- oder Firebase-Anbindung
 

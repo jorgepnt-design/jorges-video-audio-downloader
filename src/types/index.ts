@@ -91,7 +91,7 @@ export interface Stadium {
   id: string;
   name: string;
   city: string;
-  country: "USA" | "Canada" | "Mexico";
+  country: "USA" | "Kanada" | "Mexiko";
 }
 
 export interface Match {
