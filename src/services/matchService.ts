@@ -56,6 +56,9 @@ export const matchService = {
   getFavoriteMatches(favoriteTeams: Team[]): Match[] {
     return mockMatches.filter((match) => isFavoriteMatch(match, favoriteTeams));
   },
+  getTeamMatches(teamId: string): Match[] {
+    return mockMatches.filter((match) => match.teamAId === teamId || match.teamBId === teamId);
+  },
   getNextFavoriteMatch(favoriteTeams: Team[]): Match | undefined {
     const now = Date.now();
     return this.getFavoriteMatches(favoriteTeams)

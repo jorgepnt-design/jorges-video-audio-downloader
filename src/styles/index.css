@@ -34,3 +34,19 @@ select:focus-visible {
 .safe-bottom {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .shadow-glow {
+    animation: premium-glow 4.5s ease-in-out infinite;
+  }
+}
+
+@keyframes premium-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(214, 168, 79, 0);
+  }
+  50% {
+    box-shadow: 0 0 32px rgba(214, 168, 79, 0.22);
+  }
+}

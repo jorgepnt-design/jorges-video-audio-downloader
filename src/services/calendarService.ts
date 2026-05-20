@@ -34,13 +34,14 @@ export const calendarService = {
 
     return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Jorge´s WM-Planer 2026//DE", "CALSCALE:GREGORIAN", ...events, "END:VCALENDAR"].join("\n");
   },
-  downloadIcs(matches: Match[], settings: UserSettings): void {
+  downloadIcs(matches: Match[], settings: UserSettings, filename = "wm-2026-meine-spiele.ics"): number {
     const blob = new Blob([this.createIcs(matches, settings)], { type: "text/calendar;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "wm-2026-meine-spiele.ics";
+    anchor.download = filename;
     anchor.click();
     URL.revokeObjectURL(url);
+    return matches.length;
   },
 };

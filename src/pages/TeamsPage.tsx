@@ -1,9 +1,10 @@
 import { SectionHeader } from "../components/SectionHeader";
 import { TeamSelector } from "../components/TeamSelector";
-import type { Group, Team } from "../types";
+import type { Group, Match, Team } from "../types";
 
 interface Props {
   groups: Group[];
+  matches: Match[];
   teams: Team[];
   favoriteTeams: Team[];
   favoriteIds: string[];

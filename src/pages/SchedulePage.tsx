@@ -1,4 +1,5 @@
 import { CalendarExportButton } from "../components/CalendarExportButton";
+import { CalendarExportPanel } from "../components/CalendarExportPanel";
 import { LiveUpdateButton } from "../components/LiveUpdateButton";
 import { MatchFilters } from "../components/MatchFilters";
 import { MySchedule } from "../components/MySchedule";
@@ -24,6 +25,9 @@ export function SchedulePage({ groups, matches, allMatches, favoriteMatches, fav
         <CalendarExportButton matches={favoriteMatches} settings={settings} />
         <CalendarExportButton matches={allMatches} settings={settings} label="Alle Spiele exportieren" />
         <LiveUpdateButton />
+      </div>
+      <div className="mb-4">
+        <CalendarExportPanel allMatches={allMatches} favoriteMatches={favoriteMatches} favoriteTeams={favoriteTeams} settings={settings} />
       </div>
       <MatchFilters groups={groups} filters={filters} setFilters={setFilters} />
       <MySchedule matches={matches} favoriteTeams={favoriteTeams} settings={settings} />

@@ -6,11 +6,15 @@ Moderne, responsive React-PWA für einen personalisierten Spielplan zur Fußball
 
 - Auswahl von bis zu 8 Lieblingsmannschaften aus 48 Mock-Teams in 12 Gruppen
 - Portugal ist automatisch als Favorit gesetzt
+- Dashboard mit Portugal-Fokus, nächstem Portugal-Spiel, Kaderstatus und Kalender-CTA
 - Kader- und Aufstellungsbereich pro Mannschaft mit Platz für offizielle Spieler, Formation, Startelf und Bank
+- Team-Detailpanel mit großer Flagge, Gruppe, Spielen, Kader, Aufstellung und Favorit-Status
 - Personalisierter Spielplan mit Favoriten-Hervorhebung und lokaler Zeitzone
 - Filter nach Runde, Gruppe, Datum und Team-Suche
+- Sichtbarer Datenstatus für Mock-, vorläufige und offizielle Daten
+- Live-Datenstatus mit letzter Aktualisierung, Quelle und Fehleranzeige
 - Statistikbereich mit Favoriten, Lieblingsspielen und Gruppenspielen
-- `.ics`-Export für Google Calendar, Apple Calendar und Outlook
+- `.ics`-Export für Portugal, alle Favoriten oder alle Spiele
 - Gruppenübersicht mit Tabellenstruktur für spätere echte Stände
 - PWA mit Manifest, Service Worker, Icons und Offline-Fallback
 - Services und Typen für spätere Auth-, Cloud-, Live-API- und Push-Anbindung

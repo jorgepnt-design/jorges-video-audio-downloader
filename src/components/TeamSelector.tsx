@@ -1,11 +1,12 @@
 import { Search, Star, Users, X } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { Group, Team } from "../types";
+import type { Group, Match, Team } from "../types";
 import { FlagIcon } from "./FlagIcon";
 import { TeamSquadPanel } from "./TeamSquadPanel";
 
 interface Props {
   groups: Group[];
+  matches: Match[];
   teams: Team[];
   favoriteTeams: Team[];
   favoriteIds: string[];
@@ -14,7 +15,7 @@ interface Props {
   onReset: () => void;
 }
 
-export function TeamSelector({ groups, teams, favoriteTeams, favoriteIds, maxFavorites, onToggle, onReset }: Props) {
+export function TeamSelector({ groups, matches, teams, favoriteTeams, favoriteIds, maxFavorites, onToggle, onReset }: Props) {
   const [search, setSearch] = useState("");
   const [openTeamId, setOpenTeamId] = useState<string | null>(null);
   const full = favoriteIds.length >= maxFavorites;
@@ -69,7 +70,15 @@ export function TeamSelector({ groups, teams, favoriteTeams, favoriteIds, maxFav
         </label>
       </div>
 
-      {openTeam && <TeamSquadPanel team={openTeam} onClose={() => setOpenTeamId(null)} />}
+      {openTeam && (
+        <TeamSquadPanel
+          team={openTeam}
+          matches={matches.filter((match) => match.teamAId === openTeam.id || match.teamBId === openTeam.id)}
+          isFavorite={favoriteIds.includes(openTeam.id)}
+          onToggleFavorite={() => onToggle(openTeam.id)}
+          onClose={() => setOpenTeamId(null)}
+        />
+      )}
 
       {groups.map((group) => {
         const groupTeams = visibleTeams.filter((team) => group.teams.includes(team.id));

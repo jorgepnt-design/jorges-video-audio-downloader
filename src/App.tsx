@@ -25,6 +25,7 @@ export default function App() {
       {page === "dashboard" && (
         <Dashboard
           favoriteTeams={favoriteTeams}
+          allMatches={matches}
           favoriteMatches={favoriteMatches}
           nextFavoriteMatch={nextFavoriteMatch}
           settings={settings}
@@ -34,6 +35,7 @@ export default function App() {
       {page === "teams" && (
         <TeamsPage
           groups={groups}
+          matches={matches}
           teams={teams}
           favoriteTeams={favoriteTeams}
           favoriteIds={favoriteIds}

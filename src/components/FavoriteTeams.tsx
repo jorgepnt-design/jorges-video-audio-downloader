@@ -6,7 +6,7 @@ export function FavoriteTeams({ teams }: { teams: Team[] }) {
   return (
     <div className="flex flex-wrap gap-2">
       {teams.map((team) => (
-        <span key={team.id} className="rounded-md border border-gold/40 bg-gold/15 px-3 py-2 text-sm font-semibold text-gold">
+        <span key={team.id} className="rounded-md border border-gold/40 bg-gold/15 px-3 py-2 text-sm font-semibold text-gold transition duration-200 hover:-translate-y-0.5 hover:shadow-glow">
           <span className="inline-flex items-center gap-2">
             <FlagIcon team={team} />
             {team.name}

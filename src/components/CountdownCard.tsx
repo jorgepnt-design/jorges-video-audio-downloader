@@ -21,13 +21,13 @@ export function CountdownCard({ dateUtc }: { dateUtc?: string }) {
   ];
 
   return (
-    <div className="rounded-lg border border-gold/30 bg-night/55 p-4 shadow-glow">
+    <div className="rounded-lg border border-gold/30 bg-night/55 p-4 shadow-glow transition duration-300 hover:-translate-y-0.5 hover:border-gold/60">
       <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-gold">
         <Timer size={16} aria-hidden /> Countdown
       </p>
       <div className="mt-3 grid grid-cols-4 gap-2">
         {parts.map(([label, value]) => (
-          <div key={label} className="rounded-md border border-white/10 bg-white/8 p-2 text-center">
+          <div key={label} className="rounded-md border border-white/10 bg-white/8 p-2 text-center transition hover:bg-white/12">
             <p className="text-2xl font-black">{String(value).padStart(2, "0")}</p>
             <p className="text-[11px] uppercase text-white/50">{label}</p>
           </div>

@@ -31,7 +31,9 @@ export const useFavorites = () => {
     if (storedVersion !== FAVORITES_DATA_VERSION) {
       storageService.remove(KEY);
       storageService.set(VERSION_KEY, FAVORITES_DATA_VERSION);
-      return [];
+      const normalized = normalizeFavorites([]);
+      storageService.set(KEY, normalized);
+      return normalized;
     }
     const normalized = normalizeFavorites(storageService.get<Favorite[]>(KEY, []));
     storageService.set(KEY, normalized);

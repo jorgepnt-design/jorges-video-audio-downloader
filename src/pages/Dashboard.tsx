@@ -1,11 +1,13 @@
 import { CalendarDays, Shield, Sparkles } from "lucide-react";
 import type { PageId } from "../components/Navigation";
 import { CalendarExportButton } from "../components/CalendarExportButton";
+import { CalendarExportPanel } from "../components/CalendarExportPanel";
 import { CountdownCard } from "../components/CountdownCard";
 import { FavoriteTeams } from "../components/FavoriteTeams";
 import { FlagIcon } from "../components/FlagIcon";
 import { LiveUpdateButton } from "../components/LiveUpdateButton";
 import { PWAInstallPrompt } from "../components/PWAInstallPrompt";
+import { PortugalFocusCard } from "../components/PortugalFocusCard";
 import { StatsPanel } from "../components/StatsPanel";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import { matchService } from "../services/matchService";
@@ -15,14 +17,19 @@ import { formatLocalDate, formatLocalTime } from "../utils/date";
 
 interface Props {
   favoriteTeams: Team[];
+  allMatches: Match[];
   favoriteMatches: Match[];
   nextFavoriteMatch?: Match;
   settings: UserSettings;
   onNavigate: (page: PageId) => void;
 }
 
-export function Dashboard({ favoriteTeams, favoriteMatches, nextFavoriteMatch, settings, onNavigate }: Props) {
+export function Dashboard({ favoriteTeams, allMatches, favoriteMatches, nextFavoriteMatch, settings, onNavigate }: Props) {
   const online = useOnlineStatus();
+  const portugal = teamService.getTeamById("por");
+  const nextPortugalMatch = allMatches
+    .filter((match) => (match.teamAId === "por" || match.teamBId === "por") && new Date(match.dateUtc).getTime() >= Date.now())
+    .sort((a, b) => new Date(a.dateUtc).getTime() - new Date(b.dateUtc).getTime())[0];
   const nextTeamA = nextFavoriteMatch ? teamService.getTeamById(nextFavoriteMatch.teamAId) : undefined;
   const nextTeamB = nextFavoriteMatch ? teamService.getTeamById(nextFavoriteMatch.teamBId) : undefined;
 
@@ -87,6 +94,18 @@ export function Dashboard({ favoriteTeams, favoriteMatches, nextFavoriteMatch, s
       </section>
 
       <StatsPanel favoriteTeams={favoriteTeams} favoriteMatches={favoriteMatches} nextFavoriteMatch={nextFavoriteMatch} />
+
+      {portugal && (
+        <PortugalFocusCard
+          portugal={portugal}
+          allMatches={allMatches}
+          nextPortugalMatch={nextPortugalMatch}
+          settings={settings}
+          onOpenTeams={() => onNavigate("teams")}
+        />
+      )}
+
+      <CalendarExportPanel allMatches={allMatches} favoriteMatches={favoriteMatches} favoriteTeams={favoriteTeams} settings={settings} />
 
       <section className="grid gap-4">
         <div className="rounded-lg border border-white/10 bg-white/7 p-4">
