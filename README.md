@@ -1,4 +1,4 @@
-# WM 2026 Companion
+# Jorge´s WM-Planer 2026
 
 Moderne, responsive React-PWA für einen personalisierten Spielplan zur Fußball-WM 2026. Die erste Version läuft vollständig lokal mit Mock-Daten: Favoriten, Tipps, Einstellungen und Kalenderexport funktionieren ohne API-Keys.
 

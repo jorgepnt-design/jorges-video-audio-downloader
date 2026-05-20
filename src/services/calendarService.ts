@@ -32,7 +32,7 @@ export const calendarService = {
       ].join("\n");
     });
 
-    return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//WM 2026 Companion//DE", "CALSCALE:GREGORIAN", ...events, "END:VCALENDAR"].join("\n");
+    return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Jorge´s WM-Planer 2026//DE", "CALSCALE:GREGORIAN", ...events, "END:VCALENDAR"].join("\n");
   },
   downloadIcs(matches: Match[], settings: UserSettings): void {
     const blob = new Blob([this.createIcs(matches, settings)], { type: "text/calendar;charset=utf-8" });

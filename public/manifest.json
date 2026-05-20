@@ -1,6 +1,6 @@
 {
-  "name": "WM 2026 Companion",
-  "short_name": "WM Companion",
+  "name": "Jorge´s WM-Planer 2026",
+  "short_name": "Jorge´s WM",
   "description": "Personalisierter Spielplan, Favoriten, Tipps und Kalenderexport für die WM 2026.",
   "start_url": "/wm-2026-companion/",
   "display": "standalone",

@@ -40,7 +40,7 @@ export function Dashboard({ favoriteTeams, favoriteMatches, nextFavoriteMatch, p
         <div className="relative grid gap-6 lg:grid-cols-[1.2fr_.8fr]">
           <div>
             <p className="mb-3 inline-flex items-center gap-2 rounded-md border border-gold/30 bg-gold/10 px-3 py-1 text-sm font-bold text-gold">
-              <Sparkles size={15} aria-hidden /> WM 2026 Companion
+              <Sparkles size={15} aria-hidden /> Jorge´s WM-Planer 2026
             </p>
             <h1 className="max-w-3xl text-4xl font-black leading-tight md:text-6xl">Dein persönlicher WM 2026 Spielplan</h1>
             <p className="mt-4 max-w-2xl text-base text-white/70 md:text-lg">

@@ -39,8 +39,8 @@ export function Navigation({ current, onNavigate }: Props) {
       </nav>
       <aside className="sticky top-4 hidden h-[calc(100vh-2rem)] w-64 shrink-0 rounded-lg border border-white/10 bg-white/7 p-4 backdrop-blur md:block">
         <div className="mb-8">
-          <p className="text-sm uppercase tracking-wide text-gold">WM 2026</p>
-          <h1 className="text-2xl font-black">Companion</h1>
+          <p className="text-sm uppercase tracking-wide text-gold">Jorge´s</p>
+          <h1 className="text-2xl font-black">WM-Planer 2026</h1>
         </div>
         <div className="space-y-2">
           {items.map(({ id, label, icon: Icon }) => (
