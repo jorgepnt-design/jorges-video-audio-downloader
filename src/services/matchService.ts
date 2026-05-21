@@ -3,6 +3,7 @@ import type { EnrichedMatch, Match, MatchFiltersState, Team } from "../types";
 import { teamService } from "./teamService";
 
 const placeholderNames: Record<string, string> = {
+  tbd: "Noch offen",
   "winner-a": "Sieger Gruppe A",
   "winner-b": "Sieger Gruppe B",
   "third-cde": "Dritter Gruppe C/D/E",
