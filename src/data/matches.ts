@@ -1,80 +1,143 @@
-import type { Group, Match, Round } from "../types";
-import { groups } from "./groups";
-import { stadiums } from "./stadiums";
+import type { GroupId, Match, Round } from "../types";
 
-// MOCK_DATA / TODO_OFFICIAL_DATA:
-// Dates are realistic placeholders and not official fixtures. Import official data here later.
-const getVenue = (index: number) => stadiums[index % stadiums.length];
-
-const makeMatch = (
-  id: string,
-  round: Round,
-  dateUtc: string,
-  teamAId: string,
-  teamBId: string,
-  stadiumIndex: number,
-  group?: Group,
-): Match => {
-  const venue = getVenue(stadiumIndex);
-
-  return {
-    id,
-    round,
-    group: group?.id,
-    groupName: group?.name,
-    dateUtc,
-    teamAId,
-    teamBId,
-    stadium: venue.name,
-    city: venue.city,
-    country: venue.country,
-    status: "scheduled",
-    scoreA: null,
-    scoreB: null,
-    liveMinute: null,
-  };
+type MatchSeed = {
+  id: number;
+  round: Round;
+  dateUtc: string;
+  teamAId: string;
+  teamBId: string;
+  stadium: string;
+  city: string;
+  country: string;
+  group?: GroupId;
 };
 
-const groupMatches: Match[] = [];
-const pairings = [
-  [0, 1],
-  [2, 3],
-  [0, 2],
-  [1, 3],
-  [0, 3],
-  [1, 2],
-];
+const groupName = (group?: GroupId) => (group ? `Gruppe ${group}` : undefined);
 
-groups.forEach((group, groupIndex) => {
-  pairings.forEach(([a, b], pairingIndex) => {
-    const dayOffset = groupIndex + pairingIndex * 4;
-    const hour = [16, 19, 22][pairingIndex % 3];
-    const date = new Date(Date.UTC(2026, 5, 11 + dayOffset, hour, 0, 0));
-    groupMatches.push(
-      makeMatch(
-        `match-${String(groupMatches.length + 1).padStart(3, "0")}`,
-        "Gruppenphase",
-        date.toISOString(),
-        group.teams[a],
-        group.teams[b],
-        groupMatches.length,
-        group,
-      ),
-    );
-  });
+const makeMatch = (seed: MatchSeed): Match => ({
+  id: `match-${String(seed.id).padStart(3, "0")}`,
+  round: seed.round,
+  group: seed.group,
+  groupName: groupName(seed.group),
+  dateUtc: seed.dateUtc,
+  teamAId: seed.teamAId,
+  teamBId: seed.teamBId,
+  stadium: seed.stadium,
+  city: seed.city,
+  country: seed.country,
+  status: "scheduled",
+  scoreA: null,
+  scoreB: null,
+  liveMinute: null,
 });
 
-const knockouts: Match[] = [
-  makeMatch("match-073", "Sechzehntelfinale", "2026-06-28T19:00:00Z", "winner-a", "third-cde", 0),
-  makeMatch("match-074", "Sechzehntelfinale", "2026-06-28T22:00:00Z", "winner-b", "third-fgh", 1),
-  makeMatch("match-075", "Achtelfinale", "2026-07-04T19:00:00Z", "winner-073", "winner-074", 2),
-  makeMatch("match-076", "Achtelfinale", "2026-07-04T22:00:00Z", "winner-075", "runner-a", 3),
-  makeMatch("match-077", "Viertelfinale", "2026-07-09T20:00:00Z", "winner-r16-1", "winner-r16-2", 4),
-  makeMatch("match-078", "Viertelfinale", "2026-07-10T20:00:00Z", "winner-r16-3", "winner-r16-4", 5),
-  makeMatch("match-079", "Halbfinale", "2026-07-14T20:00:00Z", "winner-qf-1", "winner-qf-2", 0),
-  makeMatch("match-080", "Halbfinale", "2026-07-15T20:00:00Z", "winner-qf-3", "winner-qf-4", 1),
-  makeMatch("match-081", "Spiel um Platz 3", "2026-07-18T20:00:00Z", "loser-sf-1", "loser-sf-2", 6),
-  makeMatch("match-082", "Finale", "2026-07-19T20:00:00Z", "winner-sf-1", "winner-sf-2", 0),
+const tbd = "tbd";
+
+const matchSeeds: MatchSeed[] = [
+  { id: 1, round: "Gruppenphase", group: "A", dateUtc: "2026-06-11T19:00:00Z", teamAId: "mex", teamBId: "rsa", stadium: "Estadio Azteca", city: "Mexiko-Stadt", country: "Mexiko" },
+  { id: 2, round: "Gruppenphase", group: "A", dateUtc: "2026-06-12T02:00:00Z", teamAId: "kor", teamBId: "cze", stadium: "Estadio Akron", city: "Guadalajara", country: "Mexiko" },
+  { id: 3, round: "Gruppenphase", group: "B", dateUtc: "2026-06-12T19:00:00Z", teamAId: "can", teamBId: "bih", stadium: "BMO Field", city: "Toronto", country: "Kanada" },
+  { id: 4, round: "Gruppenphase", group: "D", dateUtc: "2026-06-13T01:00:00Z", teamAId: "usa", teamBId: "par", stadium: "SoFi Stadium", city: "Inglewood", country: "USA" },
+  { id: 5, round: "Gruppenphase", group: "D", dateUtc: "2026-06-13T04:00:00Z", teamAId: "aus", teamBId: "tur", stadium: "BC Place", city: "Vancouver", country: "Kanada" },
+  { id: 6, round: "Gruppenphase", group: "B", dateUtc: "2026-06-13T19:00:00Z", teamAId: "qat", teamBId: "sui", stadium: "Levi's Stadium", city: "Santa Clara", country: "USA" },
+  { id: 7, round: "Gruppenphase", group: "C", dateUtc: "2026-06-13T22:00:00Z", teamAId: "bra", teamBId: "mar", stadium: "MetLife Stadium", city: "East Rutherford", country: "USA" },
+  { id: 8, round: "Gruppenphase", group: "C", dateUtc: "2026-06-14T01:00:00Z", teamAId: "hai", teamBId: "sco", stadium: "Gillette Stadium", city: "Foxborough", country: "USA" },
+  { id: 9, round: "Gruppenphase", group: "E", dateUtc: "2026-06-14T17:00:00Z", teamAId: "ger", teamBId: "cuw", stadium: "NRG Stadium", city: "Houston", country: "USA" },
+  { id: 10, round: "Gruppenphase", group: "F", dateUtc: "2026-06-14T20:00:00Z", teamAId: "ned", teamBId: "jpn", stadium: "AT&T Stadium", city: "Arlington", country: "USA" },
+  { id: 11, round: "Gruppenphase", group: "E", dateUtc: "2026-06-14T23:00:00Z", teamAId: "civ", teamBId: "ecu", stadium: "Lincoln Financial Field", city: "Philadelphia", country: "USA" },
+  { id: 12, round: "Gruppenphase", group: "F", dateUtc: "2026-06-15T02:00:00Z", teamAId: "tun", teamBId: "swe", stadium: "Estadio BBVA", city: "Monterrey", country: "Mexiko" },
+  { id: 13, round: "Gruppenphase", group: "H", dateUtc: "2026-06-15T16:00:00Z", teamAId: "esp", teamBId: "cpv", stadium: "Mercedes-Benz Stadium", city: "Atlanta", country: "USA" },
+  { id: 14, round: "Gruppenphase", group: "G", dateUtc: "2026-06-15T19:00:00Z", teamAId: "bel", teamBId: "egy", stadium: "Lumen Field", city: "Seattle", country: "USA" },
+  { id: 15, round: "Gruppenphase", group: "H", dateUtc: "2026-06-15T22:00:00Z", teamAId: "ksa", teamBId: "uru", stadium: "Hard Rock Stadium", city: "Miami Gardens", country: "USA" },
+  { id: 16, round: "Gruppenphase", group: "G", dateUtc: "2026-06-16T01:00:00Z", teamAId: "irn", teamBId: "nzl", stadium: "SoFi Stadium", city: "Inglewood", country: "USA" },
+  { id: 17, round: "Gruppenphase", group: "J", dateUtc: "2026-06-16T04:00:00Z", teamAId: "aut", teamBId: "jor", stadium: "Levi's Stadium", city: "Santa Clara", country: "USA" },
+  { id: 18, round: "Gruppenphase", group: "I", dateUtc: "2026-06-16T19:00:00Z", teamAId: "fra", teamBId: "sen", stadium: "MetLife Stadium", city: "East Rutherford", country: "USA" },
+  { id: 19, round: "Gruppenphase", group: "I", dateUtc: "2026-06-16T22:00:00Z", teamAId: "nor", teamBId: "irq", stadium: "Gillette Stadium", city: "Foxborough", country: "USA" },
+  { id: 20, round: "Gruppenphase", group: "J", dateUtc: "2026-06-17T01:00:00Z", teamAId: "arg", teamBId: "alg", stadium: "GEHA Field at Arrowhead", city: "Kansas City", country: "USA" },
+  { id: 21, round: "Gruppenphase", group: "K", dateUtc: "2026-06-17T17:00:00Z", teamAId: "por", teamBId: "cod", stadium: "NRG Stadium", city: "Houston", country: "USA" },
+  { id: 22, round: "Gruppenphase", group: "L", dateUtc: "2026-06-17T20:00:00Z", teamAId: "eng", teamBId: "cro", stadium: "AT&T Stadium", city: "Arlington", country: "USA" },
+  { id: 23, round: "Gruppenphase", group: "L", dateUtc: "2026-06-17T23:00:00Z", teamAId: "gha", teamBId: "pan", stadium: "BMO Field", city: "Toronto", country: "Kanada" },
+  { id: 24, round: "Gruppenphase", group: "K", dateUtc: "2026-06-18T02:00:00Z", teamAId: "uzb", teamBId: "col", stadium: "Estadio Azteca", city: "Mexiko-Stadt", country: "Mexiko" },
+  { id: 25, round: "Gruppenphase", group: "A", dateUtc: "2026-06-18T16:00:00Z", teamAId: "rsa", teamBId: "cze", stadium: "Mercedes-Benz Stadium", city: "Atlanta", country: "USA" },
+  { id: 26, round: "Gruppenphase", group: "B", dateUtc: "2026-06-18T19:00:00Z", teamAId: "sui", teamBId: "bih", stadium: "SoFi Stadium", city: "Inglewood", country: "USA" },
+  { id: 27, round: "Gruppenphase", group: "B", dateUtc: "2026-06-18T22:00:00Z", teamAId: "can", teamBId: "qat", stadium: "BC Place", city: "Vancouver", country: "Kanada" },
+  { id: 28, round: "Gruppenphase", group: "A", dateUtc: "2026-06-19T01:00:00Z", teamAId: "mex", teamBId: "kor", stadium: "Estadio Akron", city: "Guadalajara", country: "Mexiko" },
+  { id: 29, round: "Gruppenphase", group: "D", dateUtc: "2026-06-19T04:00:00Z", teamAId: "par", teamBId: "tur", stadium: "Levi's Stadium", city: "Santa Clara", country: "USA" },
+  { id: 30, round: "Gruppenphase", group: "C", dateUtc: "2026-06-19T19:00:00Z", teamAId: "sco", teamBId: "mar", stadium: "Gillette Stadium", city: "Foxborough", country: "USA" },
+  { id: 31, round: "Gruppenphase", group: "D", dateUtc: "2026-06-19T19:00:00Z", teamAId: "usa", teamBId: "aus", stadium: "Lumen Field", city: "Seattle", country: "USA" },
+  { id: 32, round: "Gruppenphase", group: "C", dateUtc: "2026-06-20T01:00:00Z", teamAId: "bra", teamBId: "hai", stadium: "Lincoln Financial Field", city: "Philadelphia", country: "USA" },
+  { id: 33, round: "Gruppenphase", group: "F", dateUtc: "2026-06-20T04:00:00Z", teamAId: "tun", teamBId: "jpn", stadium: "Estadio BBVA", city: "Monterrey", country: "Mexiko" },
+  { id: 34, round: "Gruppenphase", group: "F", dateUtc: "2026-06-20T17:00:00Z", teamAId: "ned", teamBId: "swe", stadium: "NRG Stadium", city: "Houston", country: "USA" },
+  { id: 35, round: "Gruppenphase", group: "E", dateUtc: "2026-06-20T20:00:00Z", teamAId: "ger", teamBId: "civ", stadium: "BMO Field", city: "Toronto", country: "Kanada" },
+  { id: 36, round: "Gruppenphase", group: "E", dateUtc: "2026-06-21T00:00:00Z", teamAId: "ecu", teamBId: "cuw", stadium: "GEHA Field at Arrowhead", city: "Kansas City", country: "USA" },
+  { id: 37, round: "Gruppenphase", group: "H", dateUtc: "2026-06-21T16:00:00Z", teamAId: "esp", teamBId: "ksa", stadium: "Mercedes-Benz Stadium", city: "Atlanta", country: "USA" },
+  { id: 38, round: "Gruppenphase", group: "G", dateUtc: "2026-06-21T19:00:00Z", teamAId: "bel", teamBId: "irn", stadium: "SoFi Stadium", city: "Inglewood", country: "USA" },
+  { id: 39, round: "Gruppenphase", group: "H", dateUtc: "2026-06-21T22:00:00Z", teamAId: "uru", teamBId: "cpv", stadium: "Hard Rock Stadium", city: "Miami Gardens", country: "USA" },
+  { id: 40, round: "Gruppenphase", group: "G", dateUtc: "2026-06-22T01:00:00Z", teamAId: "nzl", teamBId: "egy", stadium: "BC Place", city: "Vancouver", country: "Kanada" },
+  { id: 41, round: "Gruppenphase", group: "J", dateUtc: "2026-06-22T17:00:00Z", teamAId: "arg", teamBId: "aut", stadium: "AT&T Stadium", city: "Arlington", country: "USA" },
+  { id: 42, round: "Gruppenphase", group: "I", dateUtc: "2026-06-22T21:00:00Z", teamAId: "fra", teamBId: "irq", stadium: "Lincoln Financial Field", city: "Philadelphia", country: "USA" },
+  { id: 43, round: "Gruppenphase", group: "I", dateUtc: "2026-06-23T00:00:00Z", teamAId: "nor", teamBId: "sen", stadium: "MetLife Stadium", city: "East Rutherford", country: "USA" },
+  { id: 44, round: "Gruppenphase", group: "J", dateUtc: "2026-06-23T03:00:00Z", teamAId: "jor", teamBId: "alg", stadium: "Levi's Stadium", city: "Santa Clara", country: "USA" },
+  { id: 45, round: "Gruppenphase", group: "K", dateUtc: "2026-06-23T17:00:00Z", teamAId: "por", teamBId: "uzb", stadium: "NRG Stadium", city: "Houston", country: "USA" },
+  { id: 46, round: "Gruppenphase", group: "L", dateUtc: "2026-06-23T20:00:00Z", teamAId: "eng", teamBId: "gha", stadium: "Gillette Stadium", city: "Foxborough", country: "USA" },
+  { id: 47, round: "Gruppenphase", group: "L", dateUtc: "2026-06-23T23:00:00Z", teamAId: "pan", teamBId: "cro", stadium: "BMO Field", city: "Toronto", country: "Kanada" },
+  { id: 48, round: "Gruppenphase", group: "K", dateUtc: "2026-06-24T02:00:00Z", teamAId: "col", teamBId: "cod", stadium: "Estadio Akron", city: "Guadalajara", country: "Mexiko" },
+  { id: 49, round: "Gruppenphase", group: "B", dateUtc: "2026-06-24T19:00:00Z", teamAId: "can", teamBId: "sui", stadium: "BC Place", city: "Vancouver", country: "Kanada" },
+  { id: 50, round: "Gruppenphase", group: "B", dateUtc: "2026-06-24T19:00:00Z", teamAId: "qat", teamBId: "bih", stadium: "Lumen Field", city: "Seattle", country: "USA" },
+  { id: 51, round: "Gruppenphase", group: "C", dateUtc: "2026-06-24T22:00:00Z", teamAId: "sco", teamBId: "bra", stadium: "Hard Rock Stadium", city: "Miami Gardens", country: "USA" },
+  { id: 52, round: "Gruppenphase", group: "C", dateUtc: "2026-06-24T22:00:00Z", teamAId: "mar", teamBId: "hai", stadium: "Mercedes-Benz Stadium", city: "Atlanta", country: "USA" },
+  { id: 53, round: "Gruppenphase", group: "A", dateUtc: "2026-06-25T01:00:00Z", teamAId: "mex", teamBId: "cze", stadium: "Estadio Azteca", city: "Mexiko-Stadt", country: "Mexiko" },
+  { id: 54, round: "Gruppenphase", group: "A", dateUtc: "2026-06-25T01:00:00Z", teamAId: "kor", teamBId: "rsa", stadium: "Estadio BBVA", city: "Monterrey", country: "Mexiko" },
+  { id: 55, round: "Gruppenphase", group: "E", dateUtc: "2026-06-25T20:00:00Z", teamAId: "ecu", teamBId: "ger", stadium: "MetLife Stadium", city: "East Rutherford", country: "USA" },
+  { id: 56, round: "Gruppenphase", group: "E", dateUtc: "2026-06-25T20:00:00Z", teamAId: "cuw", teamBId: "civ", stadium: "Lincoln Financial Field", city: "Philadelphia", country: "USA" },
+  { id: 57, round: "Gruppenphase", group: "F", dateUtc: "2026-06-25T23:00:00Z", teamAId: "tun", teamBId: "ned", stadium: "GEHA Field at Arrowhead", city: "Kansas City", country: "USA" },
+  { id: 58, round: "Gruppenphase", group: "F", dateUtc: "2026-06-25T23:00:00Z", teamAId: "jpn", teamBId: "swe", stadium: "AT&T Stadium", city: "Arlington", country: "USA" },
+  { id: 59, round: "Gruppenphase", group: "D", dateUtc: "2026-06-26T02:00:00Z", teamAId: "usa", teamBId: "tur", stadium: "SoFi Stadium", city: "Inglewood", country: "USA" },
+  { id: 60, round: "Gruppenphase", group: "D", dateUtc: "2026-06-26T02:00:00Z", teamAId: "par", teamBId: "aus", stadium: "Levi's Stadium", city: "Santa Clara", country: "USA" },
+  { id: 61, round: "Gruppenphase", group: "I", dateUtc: "2026-06-26T19:00:00Z", teamAId: "nor", teamBId: "fra", stadium: "Gillette Stadium", city: "Foxborough", country: "USA" },
+  { id: 62, round: "Gruppenphase", group: "I", dateUtc: "2026-06-26T19:00:00Z", teamAId: "sen", teamBId: "irq", stadium: "BMO Field", city: "Toronto", country: "Kanada" },
+  { id: 63, round: "Gruppenphase", group: "H", dateUtc: "2026-06-27T00:00:00Z", teamAId: "uru", teamBId: "esp", stadium: "Estadio Akron", city: "Guadalajara", country: "Mexiko" },
+  { id: 64, round: "Gruppenphase", group: "H", dateUtc: "2026-06-27T00:00:00Z", teamAId: "cpv", teamBId: "ksa", stadium: "NRG Stadium", city: "Houston", country: "USA" },
+  { id: 65, round: "Gruppenphase", group: "G", dateUtc: "2026-06-27T03:00:00Z", teamAId: "nzl", teamBId: "bel", stadium: "BC Place", city: "Vancouver", country: "Kanada" },
+  { id: 66, round: "Gruppenphase", group: "G", dateUtc: "2026-06-27T03:00:00Z", teamAId: "egy", teamBId: "irn", stadium: "Lumen Field", city: "Seattle", country: "USA" },
+  { id: 67, round: "Gruppenphase", group: "L", dateUtc: "2026-06-27T21:00:00Z", teamAId: "pan", teamBId: "eng", stadium: "MetLife Stadium", city: "East Rutherford", country: "USA" },
+  { id: 68, round: "Gruppenphase", group: "L", dateUtc: "2026-06-27T21:00:00Z", teamAId: "cro", teamBId: "gha", stadium: "Lincoln Financial Field", city: "Philadelphia", country: "USA" },
+  { id: 69, round: "Gruppenphase", group: "K", dateUtc: "2026-06-27T23:30:00Z", teamAId: "col", teamBId: "por", stadium: "Hard Rock Stadium", city: "Miami Gardens", country: "USA" },
+  { id: 70, round: "Gruppenphase", group: "K", dateUtc: "2026-06-27T23:30:00Z", teamAId: "uzb", teamBId: "cod", stadium: "Mercedes-Benz Stadium", city: "Atlanta", country: "USA" },
+  { id: 71, round: "Gruppenphase", group: "J", dateUtc: "2026-06-28T02:00:00Z", teamAId: "jor", teamBId: "arg", stadium: "AT&T Stadium", city: "Arlington", country: "USA" },
+  { id: 72, round: "Gruppenphase", group: "J", dateUtc: "2026-06-28T02:00:00Z", teamAId: "alg", teamBId: "aut", stadium: "GEHA Field at Arrowhead", city: "Kansas City", country: "USA" },
+  { id: 73, round: "Sechzehntelfinale", dateUtc: "2026-06-28T19:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "SoFi Stadium", city: "Inglewood", country: "USA" },
+  { id: 74, round: "Sechzehntelfinale", dateUtc: "2026-06-29T17:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "NRG Stadium", city: "Houston", country: "USA" },
+  { id: 75, round: "Sechzehntelfinale", dateUtc: "2026-06-29T20:30:00Z", teamAId: tbd, teamBId: tbd, stadium: "Gillette Stadium", city: "Foxborough", country: "USA" },
+  { id: 76, round: "Sechzehntelfinale", dateUtc: "2026-06-30T01:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "Estadio BBVA", city: "Monterrey", country: "Mexiko" },
+  { id: 77, round: "Sechzehntelfinale", dateUtc: "2026-06-30T17:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "AT&T Stadium", city: "Arlington", country: "USA" },
+  { id: 78, round: "Sechzehntelfinale", dateUtc: "2026-06-30T21:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "MetLife Stadium", city: "East Rutherford", country: "USA" },
+  { id: 79, round: "Sechzehntelfinale", dateUtc: "2026-07-01T01:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "Estadio Azteca", city: "Mexiko-Stadt", country: "Mexiko" },
+  { id: 80, round: "Sechzehntelfinale", dateUtc: "2026-07-01T16:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "Mercedes-Benz Stadium", city: "Atlanta", country: "USA" },
+  { id: 81, round: "Sechzehntelfinale", dateUtc: "2026-07-01T20:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "Lumen Field", city: "Seattle", country: "USA" },
+  { id: 82, round: "Sechzehntelfinale", dateUtc: "2026-07-02T00:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "Levi's Stadium", city: "Santa Clara", country: "USA" },
+  { id: 83, round: "Sechzehntelfinale", dateUtc: "2026-07-02T19:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "SoFi Stadium", city: "Inglewood", country: "USA" },
+  { id: 84, round: "Sechzehntelfinale", dateUtc: "2026-07-02T23:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "BMO Field", city: "Toronto", country: "Kanada" },
+  { id: 85, round: "Sechzehntelfinale", dateUtc: "2026-07-03T03:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "BC Place", city: "Vancouver", country: "Kanada" },
+  { id: 86, round: "Sechzehntelfinale", dateUtc: "2026-07-03T18:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "AT&T Stadium", city: "Arlington", country: "USA" },
+  { id: 87, round: "Sechzehntelfinale", dateUtc: "2026-07-03T22:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "Hard Rock Stadium", city: "Miami Gardens", country: "USA" },
+  { id: 88, round: "Sechzehntelfinale", dateUtc: "2026-07-04T01:30:00Z", teamAId: tbd, teamBId: tbd, stadium: "GEHA Field at Arrowhead", city: "Kansas City", country: "USA" },
+  { id: 89, round: "Achtelfinale", dateUtc: "2026-07-04T17:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "NRG Stadium", city: "Houston", country: "USA" },
+  { id: 90, round: "Achtelfinale", dateUtc: "2026-07-04T21:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "Lincoln Financial Field", city: "Philadelphia", country: "USA" },
+  { id: 91, round: "Achtelfinale", dateUtc: "2026-07-05T20:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "MetLife Stadium", city: "East Rutherford", country: "USA" },
+  { id: 92, round: "Achtelfinale", dateUtc: "2026-07-06T00:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "Estadio Azteca", city: "Mexiko-Stadt", country: "Mexiko" },
+  { id: 93, round: "Achtelfinale", dateUtc: "2026-07-06T19:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "AT&T Stadium", city: "Arlington", country: "USA" },
+  { id: 94, round: "Achtelfinale", dateUtc: "2026-07-07T00:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "Lumen Field", city: "Seattle", country: "USA" },
+  { id: 95, round: "Achtelfinale", dateUtc: "2026-07-07T16:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "Mercedes-Benz Stadium", city: "Atlanta", country: "USA" },
+  { id: 96, round: "Achtelfinale", dateUtc: "2026-07-07T20:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "BC Place", city: "Vancouver", country: "Kanada" },
+  { id: 97, round: "Viertelfinale", dateUtc: "2026-07-09T20:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "Gillette Stadium", city: "Foxborough", country: "USA" },
+  { id: 98, round: "Viertelfinale", dateUtc: "2026-07-10T19:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "SoFi Stadium", city: "Inglewood", country: "USA" },
+  { id: 99, round: "Viertelfinale", dateUtc: "2026-07-11T21:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "Hard Rock Stadium", city: "Miami Gardens", country: "USA" },
+  { id: 100, round: "Viertelfinale", dateUtc: "2026-07-12T01:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "GEHA Field at Arrowhead", city: "Kansas City", country: "USA" },
+  { id: 101, round: "Halbfinale", dateUtc: "2026-07-14T19:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "AT&T Stadium", city: "Arlington", country: "USA" },
+  { id: 102, round: "Halbfinale", dateUtc: "2026-07-15T19:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "Mercedes-Benz Stadium", city: "Atlanta", country: "USA" },
+  { id: 103, round: "Spiel um Platz 3", dateUtc: "2026-07-18T21:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "Hard Rock Stadium", city: "Miami Gardens", country: "USA" },
+  { id: 104, round: "Finale", dateUtc: "2026-07-19T19:00:00Z", teamAId: tbd, teamBId: tbd, stadium: "MetLife Stadium", city: "East Rutherford", country: "USA" },
 ];
 
-export const matches: Match[] = [...groupMatches, ...knockouts];
+export const matches: Match[] = matchSeeds.map(makeMatch);
