@@ -194,7 +194,11 @@ function runCommand(command: string, args: string[]) {
 function cleanToolError(stderr: string) {
   if (!stderr.trim()) return "Download konnte nicht abgeschlossen werden.";
   if (stderr.includes("Unsupported URL")) return "Diese URL wird von yt-dlp nicht unterstützt.";
-  if (stderr.includes("Private video") || stderr.includes("login")) {
+  const normalized = stderr.toLowerCase();
+  if (normalized.includes("sign in to confirm") || normalized.includes("not a bot") || normalized.includes("cookies")) {
+    return "Die Plattform blockiert den Render-Server mit einer Login- oder Bot-Prüfung. Aus Sicherheits- und Rechtsgründen werden keine Cookies, Logins oder Schutz-Umgehungen verwendet.";
+  }
+  if (normalized.includes("private video") || normalized.includes("login") || normalized.includes("login_required")) {
     return "Private, geschützte oder Login-pflichtige Inhalte werden nicht heruntergeladen.";
   }
   if (stderr.includes("ffmpeg")) return "ffmpeg wird für diese Aktion benötigt oder konnte nicht gestartet werden.";
