@@ -1,7 +1,8 @@
 import cors from "cors";
 import express from "express";
+import { existsSync } from "node:fs";
 import path from "node:path";
-import { addMetadataOnly, deleteGalleryItem, ensureStorage, readGallery } from "../lib/galleryStore";
+import { addMetadataOnly, deleteGalleryItem, ensureStorage, findGalleryItem, readGallery } from "../lib/galleryStore";
 import { downloadsDir } from "../lib/paths";
 import { analyzeUrl, downloadMedia } from "../lib/downloader";
 
@@ -64,6 +65,28 @@ app.delete("/api/gallery/:id", async (req, res) => {
   }
 });
 
+app.get("/api/gallery/:id/download", async (req, res) => {
+  try {
+    const item = await findGalleryItem(req.params.id);
+    if (!item?.filePath) {
+      res.status(404).json({ error: "Datei wurde nicht gefunden." });
+      return;
+    }
+
+    const absolutePath = path.join(downloadsDir, path.basename(item.filePath));
+    if (!absolutePath.startsWith(path.resolve(downloadsDir)) || !existsSync(absolutePath)) {
+      res.status(404).json({ error: "Datei wurde nicht gefunden." });
+      return;
+    }
+
+    const extension = path.extname(absolutePath).replace(".", "") || (item.type === "audio" ? "mp3" : "mp4");
+    const fileName = `${safeFileName(item.title)}.${extension}`;
+    res.download(absolutePath, fileName);
+  } catch (error) {
+    sendError(res, error);
+  }
+});
+
 if (process.env.NODE_ENV === "production") {
   const distDir = path.join(process.cwd(), "dist");
   app.use(express.static(distDir));
@@ -80,4 +103,14 @@ function sendError(res: express.Response, error: unknown) {
   const message = error instanceof Error ? error.message : "Unerwarteter Serverfehler.";
   console.error(message);
   res.status(400).json({ error: message });
+}
+
+function safeFileName(title: string) {
+  return (
+    title
+      .replace(/[\\/:*?"<>|]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 80) || "download"
+  );
 }

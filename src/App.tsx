@@ -36,6 +36,7 @@ type GalleryItem = {
   type: MediaType;
   thumbnail: string;
   filePath: string;
+  downloadUrl?: string;
   createdAt: string;
   duration: number | null;
 };
@@ -428,12 +429,14 @@ function ActionButton({
 }
 
 function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: string) => void }) {
+  const fileUrl = item.downloadUrl ?? `/${item.filePath.replaceAll("\\", "/")}`;
+
   async function saveToDevice() {
     if (!item.filePath) return;
 
     try {
-      const url = `/${item.filePath.replaceAll("\\", "/")}`;
-      const response = await fetch(url);
+      const response = await fetch(fileUrl);
+      if (!response.ok) throw new Error("Download konnte nicht geladen werden.");
       const blob = await response.blob();
       const extension = item.type === "audio" ? "mp3" : "mp4";
       const file = new File([blob], `${safeFileName(item.title)}.${extension}`, { type: blob.type || defaultMimeType(item.type) });
@@ -482,7 +485,7 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
             <>
               <a
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-white px-3 text-sm font-bold text-slate-950"
-                href={`/${item.filePath.replaceAll("\\", "/")}`}
+                href={fileUrl}
                 target="_blank"
                 rel="noreferrer"
               >

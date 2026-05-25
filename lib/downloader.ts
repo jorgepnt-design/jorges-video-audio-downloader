@@ -16,6 +16,9 @@ type YtDlpInfo = {
   ext?: string;
 };
 
+const desktopUserAgent =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+
 export async function analyzeUrl(input: string): Promise<VideoInfo> {
   const safeUrl = await validatePublicHttpUrl(input);
   const platform = detectPlatform(safeUrl);
@@ -40,36 +43,51 @@ export async function analyzeUrl(input: string): Promise<VideoInfo> {
 export async function downloadMedia(input: string, type: MediaType): Promise<GalleryItem> {
   const info = await analyzeUrl(input);
   const id = randomUUID();
-  const outputTemplate = path.join(downloadsDir, `${id}.%(ext)s`);
+  const outputTemplate = `${id}.%(ext)s`;
+  const baseArgs = [
+    "--no-playlist",
+    "--no-warnings",
+    "--force-overwrites",
+    "--restrict-filenames",
+    "--trim-filenames",
+    "160",
+    "--user-agent",
+    desktopUserAgent,
+    "--paths",
+    downloadsDir,
+    "-o",
+    outputTemplate,
+    "--print",
+    "after_move:filepath",
+  ];
+  let downloadedFile = "";
 
   if (type === "video") {
-    await runCommand("yt-dlp", [
-      "--no-playlist",
-      "--no-warnings",
+    const stdout = await runCommand("yt-dlp", [
+      ...baseArgs,
       "-f",
-      "bv*+ba/best[ext=mp4]/best",
+      "bestvideo[vcodec^=avc1][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4][vcodec^=avc1]/best[ext=mp4]/bestvideo[ext=mp4]+bestaudio/best",
       "--merge-output-format",
       "mp4",
-      "-o",
-      outputTemplate,
+      "--remux-video",
+      "mp4",
       info.sourceUrl,
     ]);
+    downloadedFile = resolveReportedPath(stdout, id);
   } else {
-    await runCommand("yt-dlp", [
-      "--no-playlist",
-      "--no-warnings",
+    const stdout = await runCommand("yt-dlp", [
+      ...baseArgs,
       "-x",
       "--audio-format",
       "mp3",
       "--audio-quality",
       "0",
-      "-o",
-      outputTemplate,
       info.sourceUrl,
     ]);
+    downloadedFile = resolveReportedPath(stdout, id);
   }
 
-  const downloadedFile = await findDownloadedFile(id, type);
+  const finalFile = downloadedFile || (await findDownloadedFile(id, type));
 
   return addGalleryItem({
     id,
@@ -78,10 +96,21 @@ export async function downloadMedia(input: string, type: MediaType): Promise<Gal
     platform: info.platform,
     type,
     thumbnail: info.thumbnail,
-    filePath: toPublicDownloadPath(downloadedFile),
+    filePath: toPublicDownloadPath(finalFile),
+    downloadUrl: `/api/gallery/${id}/download`,
     createdAt: new Date().toISOString(),
     duration: info.duration,
   });
+}
+
+function resolveReportedPath(stdout: string, id: string) {
+  const lines = stdout
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const reported = [...lines].reverse().find((line) => line.includes(id));
+  if (!reported) return "";
+  return path.isAbsolute(reported) ? reported : path.join(downloadsDir, reported);
 }
 
 async function findDownloadedFile(id: string, type: MediaType) {

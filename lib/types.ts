@@ -19,6 +19,7 @@ export type GalleryItem = {
   type: MediaType;
   thumbnail: string;
   filePath: string;
+  downloadUrl?: string;
   createdAt: string;
   duration: number | null;
 };

@@ -1,7 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { dataDir, downloadsDir, galleryFile, projectRoot } from "./paths";
+import { dataDir, downloadsDir, galleryFile } from "./paths";
 import type { GalleryItem, VideoInfo } from "./types";
 
 export async function ensureStorage() {
@@ -52,9 +52,14 @@ export async function deleteGalleryItem(id: string) {
   await saveGallery(items.filter((item) => item.id !== id));
 
   if (target?.filePath) {
-    const absolutePath = path.resolve(projectRoot, target.filePath);
-    if (absolutePath.startsWith(downloadsDir)) {
+    const absolutePath = path.join(downloadsDir, path.basename(target.filePath));
+    if (absolutePath.startsWith(path.resolve(downloadsDir))) {
       await fs.rm(absolutePath, { force: true });
     }
   }
+}
+
+export async function findGalleryItem(id: string) {
+  const items = await readGallery();
+  return items.find((item) => item.id === id);
 }
