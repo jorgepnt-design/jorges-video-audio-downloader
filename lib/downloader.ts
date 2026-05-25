@@ -19,6 +19,20 @@ type YtDlpInfo = {
 const desktopUserAgent =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 
+const commonYtDlpArgs = [
+  "--no-warnings",
+  "--retries",
+  "3",
+  "--fragment-retries",
+  "3",
+  "--socket-timeout",
+  "30",
+  "--user-agent",
+  desktopUserAgent,
+  "--extractor-args",
+  "youtube:player_client=web,mweb,android",
+];
+
 export async function analyzeUrl(input: string): Promise<VideoInfo> {
   const safeUrl = await validatePublicHttpUrl(input);
   const platform = detectPlatform(safeUrl);
@@ -26,7 +40,7 @@ export async function analyzeUrl(input: string): Promise<VideoInfo> {
     throw new Error("Diese Plattform wird aktuell nicht unterstützt.");
   }
 
-  const output = await runCommand("yt-dlp", ["--dump-json", "--no-playlist", "--skip-download", "--no-warnings", safeUrl]);
+  const output = await runCommand("yt-dlp", [...commonYtDlpArgs, "--dump-json", "--no-playlist", "--skip-download", safeUrl]);
   const info = JSON.parse(output) as YtDlpInfo;
 
   return {
@@ -45,14 +59,12 @@ export async function downloadMedia(input: string, type: MediaType): Promise<Gal
   const id = randomUUID();
   const outputTemplate = `${id}.%(ext)s`;
   const baseArgs = [
+    ...commonYtDlpArgs,
     "--no-playlist",
-    "--no-warnings",
     "--force-overwrites",
     "--restrict-filenames",
     "--trim-filenames",
     "160",
-    "--user-agent",
-    desktopUserAgent,
     "--paths",
     downloadsDir,
     "-o",
@@ -101,6 +113,19 @@ export async function downloadMedia(input: string, type: MediaType): Promise<Gal
     createdAt: new Date().toISOString(),
     duration: info.duration,
   });
+}
+
+export async function getDownloaderDiagnostics() {
+  const [ytDlpVersion, ffmpegVersion] = await Promise.all([
+    runCommand("yt-dlp", ["--version"]).catch((error) => error instanceof Error ? error.message : "yt-dlp nicht verfügbar"),
+    runCommand("ffmpeg", ["-version"]).catch((error) => error instanceof Error ? error.message : "ffmpeg nicht verfügbar"),
+  ]);
+
+  return {
+    ytDlpVersion: ytDlpVersion.split(/\r?\n/)[0],
+    ffmpegVersion: ffmpegVersion.split(/\r?\n/)[0],
+    downloadsDir,
+  };
 }
 
 function resolveReportedPath(stdout: string, id: string) {
