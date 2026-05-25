@@ -1,116 +1,240 @@
-# Jorge´s WM-Planer 2026
+# Jorge's Video & Audio Downloader
 
-Moderne, responsive React-PWA für einen personalisierten Spielplan zur Fußball-WM 2026. Die erste Version läuft vollständig lokal mit Mock-Daten: Favoriten, Einstellungen und Kalenderexport funktionieren ohne API-Keys.
+Moderne lokale Web-App zum Analysieren und Herunterladen von Video- und Audioinhalten, fuer die du die Rechte besitzt oder bei denen ein Download ausdruecklich erlaubt ist.
+
+Die App nutzt React, TypeScript, Vite und einen Express-API-Server. Downloads laufen serverseitig ueber `yt-dlp`; MP3-Konvertierung nutzt `ffmpeg`.
 
 ## Funktionen
 
-- Auswahl von bis zu 8 Lieblingsmannschaften aus 48 Mock-Teams in 12 Gruppen
-- Portugal ist automatisch als Favorit gesetzt
-- Dashboard mit Portugal-Fokus, nächstem Portugal-Spiel, Kaderstatus und Kalender-CTA
-- Kader- und Aufstellungsbereich pro Mannschaft mit Platz für offizielle Spieler, Formation, Startelf und Bank
-- Team-Detailpanel mit großer Flagge, Gruppe, Spielen, Kader, Aufstellung und Favorit-Status
-- Personalisierter Spielplan mit Favoriten-Hervorhebung und lokaler Zeitzone
-- Filter nach Runde, Gruppe, Datum und Team-Suche
-- Sichtbarer Datenstatus für Mock-, vorläufige und offizielle Daten
-- Live-Datenstatus mit letzter Aktualisierung, Quelle und Fehleranzeige
-- Statistikbereich mit Favoriten, Lieblingsspielen und Gruppenspielen
-- `.ics`-Export für Portugal, alle Favoriten oder alle Spiele
-- Gruppenübersicht mit Tabellenstruktur für spätere echte Stände
-- PWA mit Manifest, Service Worker, Icons und Offline-Fallback
-- Services und Typen für spätere Auth-, Cloud-, Live-API- und Push-Anbindung
+- Link einfügen und analysieren
+- Plattform-Erkennung fuer YouTube, Instagram, TikTok, X/Twitter und Facebook
+- Anzeige von Titel, Thumbnail, Plattform, Dauer, Dateityp und Download-Optionen
+- Video als MP4 speichern
+- Audio als MP3 extrahieren
+- Download-Historie / Galerie als responsives Grid
+- Galerie-Suche und Filter nach Typ oder Plattform
+- Medien löschen
+- Gespeicherte Datei direkt öffnen
+- Lokale Metadaten in `data/gallery.json`
+- Downloads im Projektordner `downloads/`
+
+## Rechtlicher Hinweis
+
+Bitte lade nur Inhalte herunter, an denen du die Rechte besitzt oder fuer die der Download erlaubt ist. Diese App darf nicht verwendet werden, um DRM, Paywalls, Login-Schutz, private Inhalte oder technische Schutzmechanismen zu umgehen.
+
+## Voraussetzungen
+
+- Node.js 20 oder neuer
+- npm
+- `yt-dlp`
+- `ffmpeg`
+
+### yt-dlp installieren
+
+Windows mit winget:
+
+```powershell
+winget install yt-dlp.yt-dlp
+```
+
+Alternativ mit Python:
+
+```powershell
+pip install -U yt-dlp
+```
+
+### ffmpeg installieren
+
+Windows mit winget:
+
+```powershell
+winget install Gyan.FFmpeg
+```
+
+Danach sicherstellen, dass `yt-dlp` und `ffmpeg` im PATH liegen:
+
+```powershell
+yt-dlp --version
+ffmpeg -version
+```
 
 ## Installation
 
-```bash
+```powershell
 npm install
 ```
 
-## Entwicklung starten
+Optional `.env.example` nach `.env` kopieren:
 
-```bash
+```powershell
+Copy-Item .env.example .env
+```
+
+Optional kannst du Speicherorte ueberschreiben:
+
+```env
+DOWNLOADS_DIR=downloads
+DATA_DIR=data
+```
+
+## Lokaler Start
+
+```powershell
 npm run dev
 ```
 
-Die App ist danach lokal unter der von Vite ausgegebenen URL erreichbar, typischerweise `http://localhost:5173`.
+Frontend:
 
-## Build
-
-```bash
-npm run build
+```text
+http://localhost:5173
 ```
 
-Optional kann der Produktionsbuild lokal getestet werden:
+API:
 
-```bash
-npm run preview
+```text
+http://localhost:5174
+```
+
+## Temporäre iPhone-URL
+
+Solange dein Rechner laeuft, kannst du die lokale App ueber einen Tunnel oeffentlich erreichbar machen:
+
+```powershell
+npm exec -- localtunnel --port 5174 --subdomain jorges-video-audio-downloader
+```
+
+Die URL lautet dann:
+
+```text
+https://jorges-video-audio-downloader.loca.lt
+```
+
+Das ist praktisch zum Testen auf dem iPhone, aber kein dauerhaftes Hosting.
+
+## API-Endpunkte
+
+- `POST /api/analyze`
+- `POST /api/download-video`
+- `POST /api/download-audio`
+- `GET /api/gallery`
+- `POST /api/gallery`
+- `DELETE /api/gallery/:id`
+
+Beispiel fuer Analyse:
+
+```json
+{
+  "url": "https://www.youtube.com/watch?v=..."
+}
 ```
 
 ## Projektstruktur
 
 ```text
+api/
+  server.ts
+lib/
+  downloader.ts
+  galleryStore.ts
+  paths.ts
+  types.ts
+  urlSafety.ts
 src/
-  components/   Wiederverwendbare UI-Komponenten
-  pages/        Hauptansichten der App
-  hooks/        React-Hooks für App-Zustand und Service-Zugriff
-  services/     Austauschbare Logikschicht für Storage, API, Kalender, Auth
-  data/         Mock-Daten für Teams, Spiele, Tabellen und lokalen User
-  types/        TypeScript-Datenmodelle für lokale und spätere Cloud-Daten
-  utils/        Formatierung und kleine Hilfsfunktionen
-  styles/       Tailwind-Einstieg
+  App.tsx
+  main.tsx
+  styles/index.css
+data/
+  gallery.json
+downloads/
+README.md
+.env.example
+package.json
+.gitignore
 ```
 
-## Mock-Daten ersetzen
+## Speicherung
 
-Aktuelle Daten liegen zentral in:
-
-- `src/data/teams.ts`
-- `src/data/groups.ts`
-- `src/data/matches.ts`
-- `src/data/stadiums.ts`
-- `src/data/squads.ts`
-- `src/data/standings.ts`
-
-Diese Dateien sind als `MOCK_DATA` / `TODO_OFFICIAL_DATA` markiert. Sobald finale oder lizenzierte Daten verfügbar sind, können diese Dateien oder die Services ersetzt werden. Die UI arbeitet gegen `teamService`, `groupService`, `matchService` und `footballApi`, nicht direkt gegen externe Anbieter.
-
-Wichtig für die aktuelle Mock-Version: Gruppe K enthält Portugal, DR Kongo, Usbekistan und Kolumbien. Alle Gruppen A bis L enthalten exakt 4 Teams, insgesamt also 48 Teams. Kader und Aufstellungen sind bewusst als Mock-Daten markiert, bis offizielle Spielerlisten und Startaufstellungen bekannt sind.
-
-## Spätere Supabase- oder Firebase-Anbindung
-
-Die Datei `.env.example` enthält optionale Platzhalter:
+Zum Start nutzt die App eine lokale JSON-Datei:
 
 ```text
-VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
-VITE_FIREBASE_API_KEY=
-VITE_FIREBASE_AUTH_DOMAIN=
-VITE_FIREBASE_PROJECT_ID=
-VITE_FOOTBALL_API_BASE_URL=
-VITE_FOOTBALL_API_KEY=
+data/gallery.json
 ```
 
-Vorgesehene Tabellen oder Collections:
+Die Storage-Logik ist in `lib/galleryStore.ts` gekapselt. Dadurch kann spaeter relativ einfach Supabase, Firebase, SQLite oder ein eigener Cloud-Speicher angebunden werden, ohne das Frontend neu zu strukturieren.
 
-- `users`
-- `teams`
-- `matches`
-- `favorites`
-- `groups`
-- `standings`
-- `notification_settings`
+## Sicherheit
 
-Empfohlene Integrationspunkte:
+Die API prueft eingehende URLs:
 
-- `src/services/authService.ts` für Supabase Auth oder Firebase Authentication
-- `src/services/storageService.ts` für Cloud-Speicherung statt `localStorage`
-- `src/services/footballApi.ts` für Live-Ergebnisse und Tabellen
-- `src/services/notificationService.ts` für Web Push oder Firebase Cloud Messaging
-- `src/services/syncService.ts` für spätere Cloud- und Realtime-Synchronisierung
+- nur `http` und `https`
+- blockiert `localhost`, `127.0.0.1`, `0.0.0.0`, `::1`
+- blockiert private IPv4-Bereiche wie `10.x.x.x`, `172.16-31.x.x`, `192.168.x.x`
+- blockiert lokale IPv6-Bereiche
+- erlaubt nur die vorgesehenen Plattformen
+- keine Cookies, Logins oder Umgehungsmechanismen
+
+## Build
+
+```powershell
+npm run build
+```
+
+Produktionsstart nach dem Build:
+
+```powershell
+npm start
+```
 
 ## Deployment
 
-Das Projekt ist GitHub-kompatibel und kann auf GitHub Pages, Vercel, Netlify, Firebase Hosting oder Supabase Hosting deployt werden. Für Vercel und Netlify reicht typischerweise:
+### GitHub
 
-- Build command: `npm run build`
-- Publish directory: `dist`
+1. Repository erstellen.
+2. `.gitignore` pruefen: `downloads/` und `data/gallery.json` werden nicht committed.
+3. Code pushen.
+4. Deployment-Anbieter mit dem Repository verbinden.
 
-Die App verwendet keine geschützten FIFA-Logos oder offiziellen Markenassets. Das App-Icon liegt lokal unter `public/icons/`.
+### Vercel
+
+Vercel ist ideal fuer Frontends, aber serverseitige Downloads mit `yt-dlp` und `ffmpeg` sind dort nur eingeschraenkt sinnvoll, weil Serverless-Umgebungen kurzlebig sind und Binary-Abhaengigkeiten brauchen. Empfehlung: Frontend auf Vercel, API separat auf Render, Railway oder eigenem Server betreiben.
+
+### Render
+
+1. Web Service erstellen.
+2. Repository verbinden.
+3. Als Blueprint `render.yaml` verwenden oder einen Docker Web Service anlegen.
+4. Service-Name: `jorges-video-audio-downloader`
+5. Das Dockerfile installiert `yt-dlp` und `ffmpeg`.
+6. Fuer dauerhafte Dateien ein Persistent Disk konfigurieren und `downloads/` sowie `data/` darauf legen.
+
+Wenn der Name verfuegbar ist, erzeugt Render eine URL wie:
+
+```text
+https://jorges-video-audio-downloader.onrender.com
+```
+
+### Railway
+
+1. Neues Railway-Projekt aus GitHub-Repo erstellen.
+2. Dockerfile als Build-Quelle verwenden.
+3. Service-Name: `jorges-video-audio-downloader`
+4. Persistente Volumes fuer Downloads und Metadaten verwenden.
+
+### Eigener Server
+
+1. Node.js, npm, `yt-dlp` und `ffmpeg` installieren.
+2. Repository klonen.
+3. `npm install`
+4. `npm run build`
+5. `npm start`
+6. Optional mit Nginx als Reverse Proxy vor `http://localhost:5174` betreiben.
+7. `downloads/` regelmaessig sichern oder auf einen separaten Datentraeger legen.
+
+## Spaetere Erweiterungen
+
+- Login und Nutzerkonten
+- Supabase/Firebase Storage
+- Rollen und Quotas
+- Cloud-Galerie pro Nutzer
+- Job-Queue fuer lange Downloads
+- WebSocket- oder SSE-Fortschritt pro Download

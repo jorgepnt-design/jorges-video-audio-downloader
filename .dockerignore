@@ -1,0 +1,8 @@
+node_modules
+dist
+downloads
+data/gallery.json
+.git
+.env
+*.log
+*.tsbuildinfo

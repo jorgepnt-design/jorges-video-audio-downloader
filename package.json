@@ -1,13 +1,16 @@
 {
-  "name": "wm-2026-companion",
+  "name": "jorges-video-audio-downloader",
   "version": "1.0.0",
-  "description": "Lokale PWA fuer einen personalisierten WM-2026-Spielplan.",
+  "description": "Moderne lokale Web-App zum Analysieren und Herunterladen erlaubter Video- und Audioinhalte.",
   "private": true,
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:web": "vite",
+    "dev:api": "tsx watch api/server.ts",
     "build": "tsc -b && vite build",
+    "start": "cross-env NODE_ENV=production tsx api/server.ts",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc -b --noEmit"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +18,9 @@
   "type": "module",
   "dependencies": {
     "@vitejs/plugin-react": "^6.0.2",
+    "concurrently": "^9.2.1",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "lucide-react": "^1.16.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
@@ -22,10 +28,15 @@
     "vite": "^8.0.13"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.9.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.5.0",
+    "cross-env": "^10.1.0",
     "postcss": "^8.5.15",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.22.3"
   }
 }
