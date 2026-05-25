@@ -78,5 +78,6 @@ ensureStorage().then(() => {
 
 function sendError(res: express.Response, error: unknown) {
   const message = error instanceof Error ? error.message : "Unerwarteter Serverfehler.";
+  console.error(message);
   res.status(400).json({ error: message });
 }

@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import { promises as fs } from "node:fs";
 import path from "node:path";
 import { addGalleryItem } from "./galleryStore";
 import { downloadsDir } from "./paths";
@@ -39,19 +40,18 @@ export async function analyzeUrl(input: string): Promise<VideoInfo> {
 export async function downloadMedia(input: string, type: MediaType): Promise<GalleryItem> {
   const info = await analyzeUrl(input);
   const id = randomUUID();
-  const outputFile = type === "video" ? `${id}.mp4` : `${id}.mp3`;
-  const outputPath = path.join(downloadsDir, outputFile);
+  const outputTemplate = path.join(downloadsDir, `${id}.%(ext)s`);
 
   if (type === "video") {
     await runCommand("yt-dlp", [
       "--no-playlist",
       "--no-warnings",
       "-f",
-      "bv*+ba/b",
+      "bv*+ba/best[ext=mp4]/best",
       "--merge-output-format",
       "mp4",
       "-o",
-      outputPath,
+      outputTemplate,
       info.sourceUrl,
     ]);
   } else {
@@ -64,10 +64,12 @@ export async function downloadMedia(input: string, type: MediaType): Promise<Gal
       "--audio-quality",
       "0",
       "-o",
-      path.join(downloadsDir, `${id}.%(ext)s`),
+      outputTemplate,
       info.sourceUrl,
     ]);
   }
+
+  const downloadedFile = await findDownloadedFile(id, type);
 
   return addGalleryItem({
     id,
@@ -76,10 +78,35 @@ export async function downloadMedia(input: string, type: MediaType): Promise<Gal
     platform: info.platform,
     type,
     thumbnail: info.thumbnail,
-    filePath: `downloads/${outputFile}`,
+    filePath: toPublicDownloadPath(downloadedFile),
     createdAt: new Date().toISOString(),
     duration: info.duration,
   });
+}
+
+async function findDownloadedFile(id: string, type: MediaType) {
+  const expectedExtension = type === "audio" ? ".mp3" : ".mp4";
+  const expectedPath = path.join(downloadsDir, `${id}${expectedExtension}`);
+
+  try {
+    await fs.access(expectedPath);
+    return expectedPath;
+  } catch {
+    const files = await fs.readdir(downloadsDir);
+    const candidates = files
+      .filter((file) => file.startsWith(`${id}.`))
+      .map((file) => path.join(downloadsDir, file));
+
+    if (candidates.length > 0) {
+      return candidates[0];
+    }
+  }
+
+  throw new Error("Download wurde abgeschlossen, aber die Datei konnte nicht im Download-Ordner gefunden werden.");
+}
+
+function toPublicDownloadPath(absolutePath: string) {
+  return `downloads/${path.basename(absolutePath)}`;
 }
 
 function runCommand(command: string, args: string[]) {
