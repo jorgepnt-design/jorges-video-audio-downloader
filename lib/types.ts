@@ -20,6 +20,7 @@ export type GalleryItem = {
   thumbnail: string;
   filePath: string;
   downloadUrl?: string;
+  viewUrl?: string;
   createdAt: string;
   duration: number | null;
 };

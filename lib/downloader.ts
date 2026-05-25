@@ -110,6 +110,7 @@ export async function downloadMedia(input: string, type: MediaType): Promise<Gal
     thumbnail: info.thumbnail,
     filePath: toPublicDownloadPath(finalFile),
     downloadUrl: `/api/gallery/${id}/download`,
+    viewUrl: `/api/gallery/${id}/view`,
     createdAt: new Date().toISOString(),
     duration: info.duration,
   });

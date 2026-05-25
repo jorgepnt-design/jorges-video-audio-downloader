@@ -37,6 +37,7 @@ type GalleryItem = {
   thumbnail: string;
   filePath: string;
   downloadUrl?: string;
+  viewUrl?: string;
   createdAt: string;
   duration: number | null;
 };
@@ -430,6 +431,7 @@ function ActionButton({
 
 function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: string) => void }) {
   const fileUrl = item.downloadUrl ?? `/${item.filePath.replaceAll("\\", "/")}`;
+  const viewUrl = item.viewUrl ?? fileUrl;
 
   async function saveToDevice() {
     if (!item.filePath) return;
@@ -445,7 +447,7 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
         await navigator.share({
           files: [file],
           title: item.title,
-          text: "Medien-Datei aus Jorge's Video & Audio Downloader speichern.",
+          text: "Medien-Datei aus Jorge's Video & Audio Downloader öffnen oder speichern.",
         });
         return;
       }
@@ -459,7 +461,7 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
       link.remove();
       URL.revokeObjectURL(objectUrl);
     } catch {
-      window.alert("Die Datei konnte nicht zum Speichern vorbereitet werden. Öffne sie bitte zuerst und nutze dann die iPhone-Teilen-Funktion.");
+      window.alert("Die Galerie-App kann nicht direkt geöffnet werden. Öffne die Datei und nutze dann die Teilen-Funktion deines Geräts.");
     }
   }
 
@@ -485,7 +487,7 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
             <>
               <a
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-white px-3 text-sm font-bold text-slate-950"
-                href={fileUrl}
+                href={viewUrl}
                 target="_blank"
                 rel="noreferrer"
               >
@@ -497,7 +499,7 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-cyan-300/30 bg-cyan-300/10 px-3 text-sm font-bold text-cyan-100 transition hover:bg-cyan-300/20"
               >
                 <Share2 size={18} />
-                In Fotos sichern
+                Mit Galerie öffnen
               </button>
             </>
           ) : (

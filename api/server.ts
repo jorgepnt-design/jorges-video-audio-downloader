@@ -75,21 +75,24 @@ app.delete("/api/gallery/:id", async (req, res) => {
 
 app.get("/api/gallery/:id/download", async (req, res) => {
   try {
-    const item = await findGalleryItem(req.params.id);
-    if (!item?.filePath) {
-      res.status(404).json({ error: "Datei wurde nicht gefunden." });
-      return;
-    }
-
-    const absolutePath = path.join(downloadsDir, path.basename(item.filePath));
-    if (!absolutePath.startsWith(path.resolve(downloadsDir)) || !existsSync(absolutePath)) {
-      res.status(404).json({ error: "Datei wurde nicht gefunden." });
-      return;
-    }
-
-    const extension = path.extname(absolutePath).replace(".", "") || (item.type === "audio" ? "mp3" : "mp4");
+    const { item, absolutePath } = await getGalleryFile(req.params.id);
+    const extension = path.extname(absolutePath).replace(".", "") || defaultExtension(item.type);
     const fileName = `${safeFileName(item.title)}.${extension}`;
     res.download(absolutePath, fileName);
+  } catch (error) {
+    sendError(res, error);
+  }
+});
+
+app.get("/api/gallery/:id/view", async (req, res) => {
+  try {
+    const { item, absolutePath } = await getGalleryFile(req.params.id);
+    const extension = path.extname(absolutePath).replace(".", "") || defaultExtension(item.type);
+    const fileName = `${safeFileName(item.title)}.${extension}`;
+
+    res.setHeader("Content-Type", mimeTypeFor(item.type, extension));
+    res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(fileName)}"`);
+    res.sendFile(absolutePath);
   } catch (error) {
     sendError(res, error);
   }
@@ -121,4 +124,29 @@ function safeFileName(title: string) {
       .trim()
       .slice(0, 80) || "download"
   );
+}
+
+async function getGalleryFile(id: string) {
+  const item = await findGalleryItem(id);
+  if (!item?.filePath) {
+    throw new Error("Datei wurde nicht gefunden.");
+  }
+
+  const absolutePath = path.join(downloadsDir, path.basename(item.filePath));
+  if (!absolutePath.startsWith(path.resolve(downloadsDir)) || !existsSync(absolutePath)) {
+    throw new Error("Datei wurde nicht gefunden.");
+  }
+
+  return { item, absolutePath };
+}
+
+function defaultExtension(type: string) {
+  return type === "audio" ? "mp3" : "mp4";
+}
+
+function mimeTypeFor(type: string, extension: string) {
+  if (type === "audio" || extension === "mp3") return "audio/mpeg";
+  if (extension === "mov") return "video/quicktime";
+  if (extension === "webm") return "video/webm";
+  return "video/mp4";
 }
