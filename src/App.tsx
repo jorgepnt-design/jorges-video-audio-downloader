@@ -8,6 +8,7 @@ import {
   Loader2,
   PlayCircle,
   Search,
+  Share2,
   ShieldCheck,
   Trash2,
 } from "lucide-react";
@@ -427,6 +428,38 @@ function ActionButton({
 }
 
 function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: string) => void }) {
+  async function saveToDevice() {
+    if (!item.filePath) return;
+
+    try {
+      const url = `/${item.filePath.replaceAll("\\", "/")}`;
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const extension = item.type === "audio" ? "mp3" : "mp4";
+      const file = new File([blob], `${safeFileName(item.title)}.${extension}`, { type: blob.type || defaultMimeType(item.type) });
+
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: item.title,
+          text: "Medien-Datei aus Jorge's Video & Audio Downloader speichern.",
+        });
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      window.alert("Die Datei konnte nicht zum Speichern vorbereitet werden. Öffne sie bitte zuerst und nutze dann die iPhone-Teilen-Funktion.");
+    }
+  }
+
   return (
     <article className="overflow-hidden rounded-3xl border border-white/10 bg-black/24 shadow-xl shadow-black/20">
       {item.thumbnail ? (
@@ -444,19 +477,28 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
         </div>
         <h3 className="line-clamp-2 min-h-14 text-lg font-black leading-tight text-white">{item.title}</h3>
         <p className="mt-2 text-xs text-slate-500">{new Date(item.createdAt).toLocaleString("de-DE")}</p>
-        <div className="mt-4 flex gap-2">
+        <div className="mt-4 grid grid-cols-[1fr_1fr_auto] gap-2">
           {item.filePath ? (
-            <a
-              className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-2xl bg-white px-3 text-sm font-bold text-slate-950"
-              href={`/${item.filePath.replaceAll("\\", "/")}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <PlayCircle size={18} />
-              Datei öffnen
-            </a>
+            <>
+              <a
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-white px-3 text-sm font-bold text-slate-950"
+                href={`/${item.filePath.replaceAll("\\", "/")}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <PlayCircle size={18} />
+                Datei öffnen
+              </a>
+              <button
+                onClick={saveToDevice}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-cyan-300/30 bg-cyan-300/10 px-3 text-sm font-bold text-cyan-100 transition hover:bg-cyan-300/20"
+              >
+                <Share2 size={18} />
+                In Fotos sichern
+              </button>
+            </>
           ) : (
-            <span className="inline-flex min-h-11 flex-1 items-center justify-center rounded-2xl border border-white/10 text-sm text-slate-400">
+            <span className="col-span-2 inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 text-sm text-slate-400">
               Nur Metadaten
             </span>
           )}
@@ -471,4 +513,16 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
       </div>
     </article>
   );
+}
+
+function safeFileName(title: string) {
+  return title
+    .replace(/[\\/:*?"<>|]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80) || "download";
+}
+
+function defaultMimeType(type: MediaType) {
+  return type === "audio" ? "audio/mpeg" : "video/mp4";
 }
