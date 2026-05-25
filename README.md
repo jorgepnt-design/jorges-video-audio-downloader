@@ -70,6 +70,13 @@ Optional `.env.example` nach `.env` kopieren:
 Copy-Item .env.example .env
 ```
 
+Optional kannst du Speicherorte ueberschreiben:
+
+```env
+DOWNLOADS_DIR=downloads
+DATA_DIR=data
+```
+
 ## Lokaler Start
 
 ```powershell
@@ -87,6 +94,22 @@ API:
 ```text
 http://localhost:5174
 ```
+
+## Temporäre iPhone-URL
+
+Solange dein Rechner laeuft, kannst du die lokale App ueber einen Tunnel oeffentlich erreichbar machen:
+
+```powershell
+npm exec -- localtunnel --port 5174 --subdomain jorges-video-audio-downloader
+```
+
+Die URL lautet dann:
+
+```text
+https://jorges-video-audio-downloader.loca.lt
+```
+
+Das ist praktisch zum Testen auf dem iPhone, aber kein dauerhaftes Hosting.
 
 ## API-Endpunkte
 
@@ -179,18 +202,23 @@ Vercel ist ideal fuer Frontends, aber serverseitige Downloads mit `yt-dlp` und `
 
 1. Web Service erstellen.
 2. Repository verbinden.
-3. Build Command: `npm install && npm run build`
-4. Start Command: `npm start`
-5. `yt-dlp` und `ffmpeg` im Render-Image oder ueber ein Dockerfile bereitstellen.
+3. Als Blueprint `render.yaml` verwenden oder einen Docker Web Service anlegen.
+4. Service-Name: `jorges-video-audio-downloader`
+5. Das Dockerfile installiert `yt-dlp` und `ffmpeg`.
 6. Fuer dauerhafte Dateien ein Persistent Disk konfigurieren und `downloads/` sowie `data/` darauf legen.
+
+Wenn der Name verfuegbar ist, erzeugt Render eine URL wie:
+
+```text
+https://jorges-video-audio-downloader.onrender.com
+```
 
 ### Railway
 
 1. Neues Railway-Projekt aus GitHub-Repo erstellen.
-2. Build: `npm install && npm run build`
-3. Start: `npm start`
-4. `yt-dlp` und `ffmpeg` ueber Nixpacks oder Dockerfile installieren.
-5. Persistente Volumes fuer Downloads und Metadaten verwenden.
+2. Dockerfile als Build-Quelle verwenden.
+3. Service-Name: `jorges-video-audio-downloader`
+4. Persistente Volumes fuer Downloads und Metadaten verwenden.
 
 ### Eigener Server
 
