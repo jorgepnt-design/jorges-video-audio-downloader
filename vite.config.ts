@@ -2,11 +2,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
+  base: "/wm-2026-companion/",
   plugins: [react()],
-  server: {
-    proxy: {
-      "/api": "http://localhost:5174",
-      "/downloads": "http://localhost:5174",
-    },
-  },
 });

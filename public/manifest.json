@@ -1,37 +1,30 @@
 {
-  "name": "Jorge's Video & Audio Downloader",
-  "short_name": "Jorge Downloader",
-  "description": "Video- und Audio-Downloader fuer erlaubte Inhalte.",
-  "start_url": "/",
-  "scope": "/",
+  "name": "Jorge´s WM-Planer 2026",
+  "short_name": "Jorge´s WM",
+  "description": "Personalisierter Spielplan, Favoriten und Kalenderexport für die WM 2026.",
+  "start_url": "/wm-2026-companion/",
   "display": "standalone",
-  "background_color": "#070a12",
-  "theme_color": "#070a12",
+  "background_color": "#081633",
+  "theme_color": "#081633",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/icons/icon-1024.png",
+      "src": "icons/icon-1024.png",
       "sizes": "1024x1024",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }
