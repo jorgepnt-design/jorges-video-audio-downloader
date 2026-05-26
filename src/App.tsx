@@ -433,15 +433,19 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
   const fileUrl = item.downloadUrl ?? `/${item.filePath.replaceAll("\\", "/")}`;
   const viewUrl = item.viewUrl ?? fileUrl;
 
+  async function getShareFile() {
+    const response = await fetch(fileUrl);
+    if (!response.ok) throw new Error("Download konnte nicht geladen werden.");
+    const blob = await response.blob();
+    const extension = item.type === "audio" ? "mp3" : "mp4";
+    return new File([blob], `${safeFileName(item.title)}.${extension}`, { type: blob.type || defaultMimeType(item.type) });
+  }
+
   async function saveToDevice() {
     if (!item.filePath) return;
 
     try {
-      const response = await fetch(fileUrl);
-      if (!response.ok) throw new Error("Download konnte nicht geladen werden.");
-      const blob = await response.blob();
-      const extension = item.type === "audio" ? "mp3" : "mp4";
-      const file = new File([blob], `${safeFileName(item.title)}.${extension}`, { type: blob.type || defaultMimeType(item.type) });
+      const file = await getShareFile();
 
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({
@@ -452,7 +456,7 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
         return;
       }
 
-      const objectUrl = URL.createObjectURL(blob);
+      const objectUrl = URL.createObjectURL(file);
       const link = document.createElement("a");
       link.href = objectUrl;
       link.download = file.name;
@@ -462,6 +466,36 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
       URL.revokeObjectURL(objectUrl);
     } catch {
       window.alert("Die Galerie-App kann nicht direkt geöffnet werden. Öffne die Datei und nutze dann die Teilen-Funktion deines Geräts.");
+    }
+  }
+
+  async function shareMedia() {
+    if (!item.filePath) return;
+
+    try {
+      const file = await getShareFile();
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: item.title,
+          text: "Video aus Jorge's Video & Audio Downloader teilen.",
+        });
+        return;
+      }
+
+      if (navigator.share) {
+        await navigator.share({
+          title: item.title,
+          text: "Video aus Jorge's Video & Audio Downloader teilen.",
+          url: new URL(viewUrl, window.location.origin).toString(),
+        });
+        return;
+      }
+
+      await navigator.clipboard.writeText(new URL(viewUrl, window.location.origin).toString());
+      window.alert("Link wurde kopiert. Du kannst ihn jetzt z. B. in WhatsApp einfügen.");
+    } catch {
+      window.alert("Teilen ist auf diesem Gerät oder Browser nicht verfügbar. Öffne die Datei und nutze die Teilen-Funktion deines Geräts.");
     }
   }
 
@@ -482,7 +516,7 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
         </div>
         <h3 className="line-clamp-2 min-h-14 text-lg font-black leading-tight text-white">{item.title}</h3>
         <p className="mt-2 text-xs text-slate-500">{new Date(item.createdAt).toLocaleString("de-DE")}</p>
-        <div className="mt-4 grid grid-cols-[1fr_1fr_auto] gap-2">
+        <div className="mt-4 grid grid-cols-2 gap-2">
           {item.filePath ? (
             <>
               <a
@@ -501,6 +535,13 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
                 <Share2 size={18} />
                 Mit Galerie öffnen
               </button>
+              <button
+                onClick={shareMedia}
+                className="col-span-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-violet-300/30 bg-violet-300/10 px-3 text-sm font-bold text-violet-100 transition hover:bg-violet-300/20"
+              >
+                <Share2 size={18} />
+                Teilen
+              </button>
             </>
           ) : (
             <span className="col-span-2 inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 text-sm text-slate-400">
@@ -510,9 +551,10 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
           <button
             aria-label="Medien löschen"
             onClick={() => onDelete(item.id)}
-            className="grid size-11 place-items-center rounded-2xl border border-red-300/20 bg-red-500/10 text-red-100 transition hover:bg-red-500/20"
+            className="col-span-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-red-300/20 bg-red-500/10 px-3 text-sm font-bold text-red-100 transition hover:bg-red-500/20"
           >
             <Trash2 size={18} />
+            Löschen
           </button>
         </div>
       </div>
