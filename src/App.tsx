@@ -15,7 +15,7 @@ import {
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 
 type MediaType = "video" | "audio";
-type Platform = "YouTube" | "Instagram" | "TikTok" | "X/Twitter" | "Facebook" | "Unbekannt";
+type Platform = "Instagram" | "TikTok" | "X/Twitter" | "Facebook" | "Unbekannt";
 type GalleryFilter = "Alle" | "Videos" | "Audio" | Platform;
 
 type VideoInfo = {
@@ -42,7 +42,7 @@ type GalleryItem = {
   duration: number | null;
 };
 
-const filters: GalleryFilter[] = ["Alle", "Videos", "Audio", "YouTube", "Instagram", "TikTok", "X/Twitter", "Facebook"];
+const filters: GalleryFilter[] = ["Alle", "Videos", "Audio", "Instagram", "TikTok", "X/Twitter", "Facebook"];
 const rightsNotice = "Bitte lade nur Inhalte herunter, an denen du die Rechte besitzt oder für die der Download erlaubt ist.";
 
 function formatDuration(seconds: number | null) {
@@ -224,7 +224,7 @@ export default function App() {
               </span>
               <div>
                 <h2 className="text-xl font-bold text-white">Link analysieren</h2>
-                <p className="text-sm text-slate-400">YouTube, Instagram, TikTok, X/Twitter und Facebook werden erkannt.</p>
+                <p className="text-sm text-slate-400">Instagram, TikTok, X/Twitter und Facebook werden erkannt.</p>
               </div>
             </div>
 
@@ -233,7 +233,7 @@ export default function App() {
                 value={url}
                 onChange={(event) => setUrl(event.target.value)}
                 className="min-h-16 rounded-2xl border border-white/10 bg-black/30 px-4 text-base text-white shadow-inner outline-none transition placeholder:text-slate-500 focus:border-cyan-300/70"
-                placeholder="https://www.youtube.com/watch?v=..."
+                placeholder="https://www.instagram.com/reel/..."
                 type="url"
                 inputMode="url"
                 required

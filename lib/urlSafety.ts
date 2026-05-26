@@ -7,7 +7,6 @@ const blockedHosts = new Set(["localhost", "0.0.0.0", "127.0.0.1", "::1"]);
 export function detectPlatform(input: string): Platform {
   const host = new URL(input).hostname.replace(/^www\./, "").toLowerCase();
 
-  if (host.includes("youtube.com") || host.includes("youtu.be")) return "YouTube";
   if (host.includes("instagram.com")) return "Instagram";
   if (host.includes("tiktok.com")) return "TikTok";
   if (host.includes("twitter.com") || host.includes("x.com")) return "X/Twitter";

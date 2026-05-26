@@ -7,7 +7,7 @@ Die App nutzt React, TypeScript, Vite und einen Express-API-Server. Downloads la
 ## Funktionen
 
 - Link einfügen und analysieren
-- Plattform-Erkennung fuer YouTube, Instagram, TikTok, X/Twitter und Facebook
+- Plattform-Erkennung fuer Instagram, TikTok, X/Twitter und Facebook
 - Anzeige von Titel, Thumbnail, Plattform, Dauer, Dateityp und Download-Optionen
 - Video als MP4 speichern
 - Audio als MP3 extrahieren
@@ -124,7 +124,7 @@ Beispiel fuer Analyse:
 
 ```json
 {
-  "url": "https://www.youtube.com/watch?v=..."
+  "url": "https://www.instagram.com/reel/..."
 }
 ```
 

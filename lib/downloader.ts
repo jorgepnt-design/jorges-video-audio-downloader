@@ -29,8 +29,6 @@ const commonYtDlpArgs = [
   "30",
   "--user-agent",
   desktopUserAgent,
-  "--extractor-args",
-  "youtube:player_client=web,mweb,android",
 ];
 
 export async function analyzeUrl(input: string): Promise<VideoInfo> {

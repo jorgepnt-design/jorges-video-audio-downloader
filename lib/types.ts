@@ -1,5 +1,5 @@
 export type MediaType = "video" | "audio";
-export type Platform = "YouTube" | "Instagram" | "TikTok" | "X/Twitter" | "Facebook" | "Unbekannt";
+export type Platform = "Instagram" | "TikTok" | "X/Twitter" | "Facebook" | "Unbekannt";
 
 export type VideoInfo = {
   title: string;
