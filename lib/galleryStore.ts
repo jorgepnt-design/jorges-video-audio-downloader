@@ -1,12 +1,13 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { dataDir, downloadsDir, galleryFile } from "./paths";
+import { dataDir, downloadsDir, galleryFile, thumbnailsDir } from "./paths";
 import type { GalleryItem, VideoInfo } from "./types";
 
 export async function ensureStorage() {
   await fs.mkdir(downloadsDir, { recursive: true });
   await fs.mkdir(dataDir, { recursive: true });
+  await fs.mkdir(thumbnailsDir, { recursive: true });
   try {
     await fs.access(galleryFile);
   } catch {
@@ -55,6 +56,13 @@ export async function deleteGalleryItem(id: string) {
     const absolutePath = path.join(downloadsDir, path.basename(target.filePath));
     if (absolutePath.startsWith(path.resolve(downloadsDir))) {
       await fs.rm(absolutePath, { force: true });
+    }
+  }
+
+  if (target?.thumbnail?.startsWith("/thumbnails/")) {
+    const thumbnailPath = path.join(thumbnailsDir, path.basename(target.thumbnail));
+    if (thumbnailPath.startsWith(path.resolve(thumbnailsDir))) {
+      await fs.rm(thumbnailPath, { force: true });
     }
   }
 }

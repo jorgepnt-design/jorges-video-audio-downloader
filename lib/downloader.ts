@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { addGalleryItem } from "./galleryStore";
-import { downloadsDir } from "./paths";
+import { downloadsDir, thumbnailsDir } from "./paths";
 import type { GalleryItem, MediaType, VideoInfo } from "./types";
 import { detectPlatform, validatePublicHttpUrl } from "./urlSafety";
 
@@ -98,6 +98,7 @@ export async function downloadMedia(input: string, type: MediaType): Promise<Gal
   }
 
   const finalFile = downloadedFile || (await findDownloadedFile(id, type));
+  const thumbnail = await createLocalThumbnail(finalFile, id, type, info.thumbnail);
 
   return addGalleryItem({
     id,
@@ -105,7 +106,7 @@ export async function downloadMedia(input: string, type: MediaType): Promise<Gal
     sourceUrl: info.sourceUrl,
     platform: info.platform,
     type,
-    thumbnail: info.thumbnail,
+    thumbnail,
     filePath: toPublicDownloadPath(finalFile),
     downloadUrl: `/api/gallery/${id}/download`,
     viewUrl: `/api/gallery/${id}/view`,
@@ -160,6 +161,71 @@ async function findDownloadedFile(id: string, type: MediaType) {
 
 function toPublicDownloadPath(absolutePath: string) {
   return `downloads/${path.basename(absolutePath)}`;
+}
+
+async function createLocalThumbnail(sourceFile: string, id: string, type: MediaType, fallbackUrl: string) {
+  await fs.mkdir(thumbnailsDir, { recursive: true });
+
+  if (type === "video") {
+    const thumbnailPath = path.join(thumbnailsDir, `${id}.jpg`);
+    try {
+      await runCommand("ffmpeg", [
+        "-y",
+        "-ss",
+        "00:00:01",
+        "-i",
+        sourceFile,
+        "-frames:v",
+        "1",
+        "-vf",
+        "scale=640:-1",
+        thumbnailPath,
+      ]);
+      await fs.access(thumbnailPath);
+      return toPublicThumbnailPath(thumbnailPath);
+    } catch {
+      // Fall back to the platform thumbnail below.
+    }
+  }
+
+  return downloadRemoteThumbnail(fallbackUrl, id);
+}
+
+async function downloadRemoteThumbnail(thumbnailUrl: string, id: string) {
+  if (!thumbnailUrl) return "";
+
+  try {
+    const response = await fetch(thumbnailUrl, {
+      headers: {
+        "User-Agent": desktopUserAgent,
+        Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+      },
+    });
+    if (!response.ok) return thumbnailUrl;
+
+    const contentType = response.headers.get("content-type") ?? "";
+    const extension = thumbnailExtension(contentType, thumbnailUrl);
+    const thumbnailPath = path.join(thumbnailsDir, `${id}${extension}`);
+    const buffer = Buffer.from(await response.arrayBuffer());
+    await fs.writeFile(thumbnailPath, buffer);
+    return toPublicThumbnailPath(thumbnailPath);
+  } catch {
+    return thumbnailUrl;
+  }
+}
+
+function thumbnailExtension(contentType: string, thumbnailUrl: string) {
+  if (contentType.includes("png")) return ".png";
+  if (contentType.includes("webp")) return ".webp";
+  if (contentType.includes("avif")) return ".avif";
+
+  const extension = path.extname(new URL(thumbnailUrl).pathname).toLowerCase();
+  if ([".jpg", ".jpeg", ".png", ".webp", ".avif"].includes(extension)) return extension;
+  return ".jpg";
+}
+
+function toPublicThumbnailPath(absolutePath: string) {
+  return `/thumbnails/${path.basename(absolutePath)}`;
 }
 
 function runCommand(command: string, args: string[]) {
