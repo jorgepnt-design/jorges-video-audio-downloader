@@ -9,6 +9,9 @@ export type VideoInfo = {
   duration: number | null;
   fileType: string;
   downloadOptions: string[];
+  // True, wenn der Link eine Sammlung ist (z. B. eine Story-Uebersicht mit
+  // mehreren Elementen). Dann wird beim Download gezielt das erste geladen.
+  isPlaylist?: boolean;
 };
 
 export type GalleryItem = {

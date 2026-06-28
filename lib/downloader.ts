@@ -15,6 +15,8 @@ type YtDlpInfo = {
   thumbnail?: string;
   duration?: number;
   ext?: string;
+  _type?: string;
+  entries?: YtDlpInfo[];
 };
 
 export type ProgressHandler = (update: { progress: number; stage: string }) => void;
@@ -81,16 +83,36 @@ export async function analyzeUrl(input: string): Promise<VideoInfo> {
     [...commonYtDlpArgs(), ...platformArgs(platform), "--dump-single-json", "--no-playlist", "--skip-download", safeUrl],
     { timeoutMs: analyzeTimeoutMs },
   );
-  const info = JSON.parse(output) as YtDlpInfo;
+
+  const parsed = output.trim() ? (JSON.parse(output) as YtDlpInfo | null) : null;
+  if (!parsed) {
+    throw new Error(
+      "Für diesen Link wurden keine Video-Daten gefunden. Bei Stories ist der Link evtl. abgelaufen oder nicht zugänglich.",
+    );
+  }
+
+  // Story-Übersichten (instagram.com/stories/name/) liefern eine Playlist mit
+  // mehreren Elementen statt eines Einzelvideos. Wir nehmen das erste
+  // abspielbare Element und laden es beim Download gezielt.
+  const isPlaylist = parsed._type === "playlist";
+  const media = isPlaylist
+    ? parsed.entries?.find((entry) => entry && (entry.ext || typeof entry.duration === "number")) ?? parsed.entries?.[0]
+    : parsed;
+  if (!media) {
+    throw new Error("Für diesen Link wurden keine abspielbaren Inhalte gefunden (Story evtl. abgelaufen oder leer).");
+  }
 
   return {
-    title: info.title ?? "Unbenanntes Video",
-    sourceUrl: info.webpage_url ?? info.original_url ?? safeUrl,
+    title: media.title ?? parsed.title ?? "Unbenanntes Video",
+    sourceUrl: isPlaylist
+      ? parsed.webpage_url ?? safeUrl
+      : media.webpage_url ?? media.original_url ?? safeUrl,
     platform,
-    thumbnail: info.thumbnail ?? "",
-    duration: typeof info.duration === "number" ? Math.round(info.duration) : null,
-    fileType: info.ext ? info.ext.toUpperCase() : "MP4 / MP3",
+    thumbnail: media.thumbnail ?? "",
+    duration: typeof media.duration === "number" ? Math.round(media.duration) : null,
+    fileType: media.ext ? media.ext.toUpperCase() : "MP4 / MP3",
     downloadOptions: ["MP4-Video", "MP3-Audio"],
+    isPlaylist,
   };
 }
 
@@ -109,10 +131,13 @@ export async function downloadMedia(
 
   const id = randomUUID();
   const outputTemplate = `${id}.%(ext)s`;
+  // Bei einer Playlist (z. B. Story-Übersicht) gezielt nur das erste Element
+  // laden, sonst das Einzelvideo.
+  const selectionArgs = info.isPlaylist ? ["--playlist-items", "1"] : ["--no-playlist"];
   const downloadArgs = [
     ...commonYtDlpArgs(),
     ...platformArgs(info.platform),
-    "--no-playlist",
+    ...selectionArgs,
     "--force-overwrites",
     "--restrict-filenames",
     "--trim-filenames",

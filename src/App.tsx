@@ -26,6 +26,7 @@ type VideoInfo = {
   duration: number | null;
   fileType: string;
   downloadOptions: string[];
+  isPlaylist?: boolean;
 };
 
 type GalleryItem = {
