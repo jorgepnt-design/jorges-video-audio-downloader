@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { getCookieArgs, hasCookiesConfigured } from "./cookies";
+import { getCookieArgs, getCookieHeader, hasCookiesConfigured } from "./cookies";
 import { addGalleryItem } from "./galleryStore";
 import { downloadsDir, thumbnailsDir } from "./paths";
 import type { GalleryItem, MediaType, Platform, VideoInfo } from "./types";
@@ -60,10 +60,20 @@ function platformArgs(platform: Platform): string[] {
 }
 
 export async function analyzeUrl(input: string): Promise<VideoInfo> {
-  const safeUrl = await validatePublicHttpUrl(input);
+  let safeUrl = await validatePublicHttpUrl(input);
   const platform = detectPlatform(safeUrl);
   if (platform === "Unbekannt") {
     throw new Error("Diese Plattform wird aktuell nicht unterstützt.");
+  }
+
+  // Facebook-Share-Links (facebook.com/share/v/... oder /share/r/...) sind
+  // Weiterleitungen, mit denen der yt-dlp-Extraktor oft nicht direkt klarkommt.
+  // Wir loesen sie vorab zur echten Video-URL auf.
+  if (platform === "Facebook") {
+    const resolved = await resolveFacebookShareUrl(safeUrl);
+    if (resolved !== safeUrl) {
+      safeUrl = await validatePublicHttpUrl(resolved);
+    }
   }
 
   const output = await runCommand(
@@ -179,6 +189,35 @@ async function reuseProvidedInfo(input: string, providedInfo: VideoInfo): Promis
     throw new Error("Diese Plattform wird aktuell nicht unterstützt.");
   }
   return { ...providedInfo, sourceUrl: safeUrl, platform };
+}
+
+async function resolveFacebookShareUrl(url: string): Promise<string> {
+  if (!/facebook\.com\/share\//i.test(url)) return url;
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15_000);
+    const cookieHeader = getCookieHeader("facebook.com");
+    const response = await fetch(url, {
+      redirect: "follow",
+      signal: controller.signal,
+      headers: {
+        "User-Agent": desktopUserAgent,
+        ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+      },
+    });
+    clearTimeout(timer);
+
+    const finalUrl = response.url || url;
+    // Nur uebernehmen, wenn die Weiterleitung weiterhin zu Facebook fuehrt und
+    // nicht auf einer Login-Seite landet.
+    if (/facebook\.com/i.test(finalUrl) && !/\/(login|checkpoint)/i.test(finalUrl)) {
+      return finalUrl;
+    }
+  } catch {
+    // Auf die Original-URL zurueckfallen; yt-dlp kann es trotzdem versuchen.
+  }
+  return url;
 }
 
 export async function getDownloaderDiagnostics() {

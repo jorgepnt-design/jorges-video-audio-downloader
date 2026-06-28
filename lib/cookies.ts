@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdtempSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
@@ -83,4 +83,31 @@ export function getCookieArgs(): string[] {
 
 export function hasCookiesConfigured(): boolean {
   return getCookieArgs().length > 0;
+}
+
+/**
+ * Baut aus der Netscape-Cookie-Datei einen `Cookie:`-Header fuer eine Domain.
+ * Wird genutzt, um z. B. Facebook-Share-Links eingeloggt aufzuloesen, bevor
+ * yt-dlp drangeht. Gibt einen leeren String zurueck, wenn keine Cookie-Datei
+ * vorhanden ist (z. B. wenn nur --cookies-from-browser genutzt wird).
+ */
+export function getCookieHeader(domainMatch: string): string {
+  const file = resolveCookieFile();
+  if (!file) return "";
+  try {
+    const content = readFileSync(file, "utf8");
+    const pairs: string[] = [];
+    for (const line of content.split(/\r?\n/)) {
+      if (!line || line.startsWith("#")) continue;
+      const parts = line.split("\t");
+      if (parts.length < 7) continue;
+      const [domain, , , , , name, value] = parts;
+      if (domain.includes(domainMatch) && name && value !== undefined) {
+        pairs.push(`${name}=${value}`);
+      }
+    }
+    return pairs.join("; ");
+  } catch {
+    return "";
+  }
 }
