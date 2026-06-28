@@ -15,7 +15,7 @@ import {
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 
 type MediaType = "video" | "audio";
-type Platform = "Instagram" | "TikTok" | "X/Twitter" | "Facebook" | "Unbekannt";
+type Platform = "Instagram" | "TikTok" | "X/Twitter" | "Facebook" | "YouTube" | "Unbekannt";
 type GalleryFilter = "Alle" | "Videos" | "Audio" | Platform;
 
 type VideoInfo = {
@@ -42,7 +42,7 @@ type GalleryItem = {
   duration: number | null;
 };
 
-const filters: GalleryFilter[] = ["Alle", "Videos", "Audio", "Instagram", "TikTok", "X/Twitter", "Facebook"];
+const filters: GalleryFilter[] = ["Alle", "Videos", "Audio", "Instagram", "TikTok", "X/Twitter", "Facebook", "YouTube"];
 const rightsNotice = "Bitte lade nur Inhalte herunter, an denen du die Rechte besitzt oder für die der Download erlaubt ist.";
 
 function formatDuration(seconds: number | null) {
@@ -58,6 +58,50 @@ function formatDuration(seconds: number | null) {
 
 function apiErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Unerwarteter Fehler. Bitte versuche es erneut.";
+}
+
+type JobEvent = {
+  status: "running" | "done" | "error";
+  progress: number;
+  stage: string;
+  item?: GalleryItem;
+  error?: string;
+};
+
+// Verbindet sich per Server-Sent-Events mit einem Download-Job und liefert den
+// fertigen Galerie-Eintrag, sobald der Download abgeschlossen ist.
+function streamJob(jobId: string, onProgress: (progress: number, stage: string) => void): Promise<GalleryItem> {
+  return new Promise((resolve, reject) => {
+    const source = new EventSource(`/api/jobs/${jobId}/stream`);
+    let settled = false;
+
+    source.onmessage = (event) => {
+      let job: JobEvent;
+      try {
+        job = JSON.parse(event.data) as JobEvent;
+      } catch {
+        return;
+      }
+      onProgress(Math.min(100, Math.max(0, job.progress ?? 0)), job.stage ?? "");
+
+      if (job.status === "done" && job.item) {
+        settled = true;
+        source.close();
+        resolve(job.item);
+      } else if (job.status === "error") {
+        settled = true;
+        source.close();
+        reject(new Error(job.error ?? "Download fehlgeschlagen."));
+      }
+    };
+
+    source.onerror = () => {
+      if (settled) return;
+      settled = true;
+      source.close();
+      reject(new Error("Verbindung zum Download-Server unterbrochen. Bitte versuche es erneut."));
+    };
+  });
 }
 
 async function requestJson<T>(path: string, options?: RequestInit): Promise<T> {
@@ -83,6 +127,7 @@ export default function App() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [downloadState, setDownloadState] = useState<MediaType | null>(null);
   const [progress, setProgress] = useState(0);
+  const [stage, setStage] = useState("");
 
   const filteredGallery = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -103,19 +148,6 @@ export default function App() {
   useEffect(() => {
     refreshGallery();
   }, []);
-
-  useEffect(() => {
-    if (!downloadState) {
-      setProgress(0);
-      return undefined;
-    }
-
-    setProgress(8);
-    const timer = window.setInterval(() => {
-      setProgress((current) => (current >= 88 ? current : current + Math.ceil(Math.random() * 9)));
-    }, 700);
-    return () => window.clearInterval(timer);
-  }, [downloadState]);
 
   async function refreshGallery() {
     try {
@@ -151,11 +183,19 @@ export default function App() {
     setError("");
     setSuccess("");
     setDownloadState(type);
+    setProgress(0);
+    setStage("Wird vorbereitet");
     try {
       const endpoint = type === "video" ? "/api/download-video" : "/api/download-audio";
-      const item = await requestJson<GalleryItem>(endpoint, {
+      // Wir geben die bereits analysierten Metadaten mit, damit der Server den
+      // Inhalt nicht erneut bei der Plattform abfragen muss.
+      const { jobId } = await requestJson<{ jobId: string }>(endpoint, {
         method: "POST",
-        body: JSON.stringify({ url: videoInfo.sourceUrl }),
+        body: JSON.stringify({ url: videoInfo.sourceUrl, info: videoInfo }),
+      });
+      const item = await streamJob(jobId, (value, label) => {
+        setProgress(value);
+        setStage(label);
       });
       setProgress(100);
       setGallery((items) => [item, ...items.filter((existing) => existing.id !== item.id)]);
@@ -163,7 +203,7 @@ export default function App() {
     } catch (err) {
       setError(apiErrorMessage(err));
     } finally {
-      window.setTimeout(() => setDownloadState(null), 500);
+      window.setTimeout(() => setDownloadState(null), 600);
     }
   }
 
@@ -224,7 +264,7 @@ export default function App() {
               </span>
               <div>
                 <h2 className="text-xl font-bold text-white">Link analysieren</h2>
-                <p className="text-sm text-slate-400">Instagram, TikTok, X/Twitter und Facebook werden erkannt.</p>
+                <p className="text-sm text-slate-400">Instagram, TikTok, X/Twitter, Facebook und YouTube werden erkannt.</p>
               </div>
             </div>
 
@@ -267,6 +307,7 @@ export default function App() {
                 info={videoInfo}
                 downloadState={downloadState}
                 progress={progress}
+                stage={stage}
                 onDownload={downloadMedia}
                 onAdd={addMetadataOnly}
               />
@@ -350,12 +391,14 @@ function VideoCard({
   info,
   downloadState,
   progress,
+  stage,
   onDownload,
   onAdd,
 }: {
   info: VideoInfo;
   downloadState: MediaType | null;
   progress: number;
+  stage: string;
   onDownload: (type: MediaType) => void;
   onAdd: () => void;
 }) {
@@ -383,7 +426,7 @@ function VideoCard({
       {downloadState && (
         <div className="mt-4 rounded-2xl border border-cyan-300/20 bg-cyan-300/10 p-4">
           <div className="mb-2 flex items-center justify-between text-sm font-semibold text-cyan-100">
-            <span>{downloadState === "video" ? "Video wird heruntergeladen" : "Audio wird zu MP3 konvertiert"}</span>
+            <span>{stage || (downloadState === "video" ? "Video wird heruntergeladen" : "Audio wird zu MP3 konvertiert")}</span>
             <span>{progress}%</span>
           </div>
           <div className="h-3 overflow-hidden rounded-full bg-black/35">

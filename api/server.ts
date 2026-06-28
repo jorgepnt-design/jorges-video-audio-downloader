@@ -5,6 +5,8 @@ import path from "node:path";
 import { addMetadataOnly, deleteGalleryItem, ensureStorage, findGalleryItem, readGallery } from "../lib/galleryStore";
 import { downloadsDir, thumbnailsDir } from "../lib/paths";
 import { analyzeUrl, downloadMedia, getDownloaderDiagnostics } from "../lib/downloader";
+import { createJob, getJob, subscribe, updateJob } from "../lib/jobs";
+import type { MediaType, VideoInfo } from "../lib/types";
 
 const app = express();
 const port = Number(process.env.PORT ?? 5174);
@@ -31,22 +33,57 @@ app.post("/api/analyze", async (req, res) => {
   }
 });
 
-app.post("/api/download-video", async (req, res) => {
-  try {
-    const item = await downloadMedia(String(req.body.url ?? ""), "video");
-    res.json(item);
-  } catch (error) {
-    sendError(res, error);
+app.post("/api/download-video", (req, res) => startDownloadJob(req, res, "video"));
+app.post("/api/download-audio", (req, res) => startDownloadJob(req, res, "audio"));
+
+// Live-Fortschritt eines Download-Jobs als Server-Sent-Events.
+app.get("/api/jobs/:id/stream", (req, res) => {
+  const job = getJob(req.params.id);
+  if (!job) {
+    res.status(404).json({ error: "Download-Job wurde nicht gefunden oder ist abgelaufen." });
+    return;
   }
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders?.();
+
+  const send = (data: unknown) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+  send(job);
+
+  const heartbeat = setInterval(() => res.write(": ping\n\n"), 15_000);
+  heartbeat.unref?.();
+
+  const unsubscribe = subscribe(job.id, (updated) => {
+    send(updated);
+    if (updated.status === "done" || updated.status === "error") {
+      clearInterval(heartbeat);
+      res.end();
+    }
+  });
+
+  // Falls der Job schon fertig ist, bevor wir uns registriert haben.
+  if (job.status === "done" || job.status === "error") {
+    clearInterval(heartbeat);
+    res.end();
+  }
+
+  req.on("close", () => {
+    clearInterval(heartbeat);
+    unsubscribe();
+  });
 });
 
-app.post("/api/download-audio", async (req, res) => {
-  try {
-    const item = await downloadMedia(String(req.body.url ?? ""), "audio");
-    res.json(item);
-  } catch (error) {
-    sendError(res, error);
+// Polling-Fallback (falls kein EventSource verfügbar ist).
+app.get("/api/jobs/:id", (req, res) => {
+  const job = getJob(req.params.id);
+  if (!job) {
+    res.status(404).json({ error: "Download-Job wurde nicht gefunden oder ist abgelaufen." });
+    return;
   }
+  res.json(job);
 });
 
 app.get("/api/gallery", async (_req, res) => {
@@ -115,6 +152,34 @@ function sendError(res: express.Response, error: unknown) {
   const message = error instanceof Error ? error.message : "Unerwarteter Serverfehler.";
   console.error(message);
   res.status(400).json({ error: message });
+}
+
+function startDownloadJob(req: express.Request, res: express.Response, type: MediaType) {
+  const url = String(req.body.url ?? "");
+  const providedInfo = (req.body.info as VideoInfo | undefined) ?? undefined;
+
+  if (!url && !providedInfo?.sourceUrl) {
+    res.status(400).json({ error: "Bitte gib einen Link an." });
+    return;
+  }
+
+  const job = createJob(type);
+  res.status(202).json({ jobId: job.id });
+
+  // Download läuft im Hintergrund; der Fortschritt wird über den Job-Stream
+  // ausgeliefert. Fehler landen im Job-Status statt in der HTTP-Antwort.
+  void downloadMedia(url, type, {
+    providedInfo,
+    onProgress: ({ progress, stage }) => updateJob(job.id, { progress, stage }),
+  })
+    .then((item) => {
+      updateJob(job.id, { status: "done", progress: 100, stage: "Fertig", item });
+    })
+    .catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : "Download fehlgeschlagen.";
+      console.error(message);
+      updateJob(job.id, { status: "error", error: message, stage: "Fehler" });
+    });
 }
 
 function safeFileName(title: string) {

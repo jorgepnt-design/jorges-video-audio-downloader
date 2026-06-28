@@ -7,10 +7,19 @@ const blockedHosts = new Set(["localhost", "0.0.0.0", "127.0.0.1", "::1"]);
 export function detectPlatform(input: string): Platform {
   const host = new URL(input).hostname.replace(/^www\./, "").toLowerCase();
 
-  if (host.includes("instagram.com")) return "Instagram";
+  if (host.includes("instagram.com") || host === "instagr.am" || host === "ig.me") return "Instagram";
   if (host.includes("tiktok.com")) return "TikTok";
-  if (host.includes("twitter.com") || host.includes("x.com")) return "X/Twitter";
-  if (host.includes("facebook.com") || host.includes("fb.watch")) return "Facebook";
+  if (host.includes("youtube.com") || host === "youtu.be") return "YouTube";
+  if (host.includes("twitter.com") || host === "x.com" || host.endsWith(".x.com")) return "X/Twitter";
+  if (
+    host.includes("facebook.com") ||
+    host.includes("fb.watch") ||
+    host === "fb.com" ||
+    host === "fb.me" ||
+    host === "fb.gg"
+  ) {
+    return "Facebook";
+  }
   return "Unbekannt";
 }
 

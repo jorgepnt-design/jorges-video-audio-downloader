@@ -7,7 +7,7 @@ Die App nutzt React, TypeScript, Vite und einen Express-API-Server. Downloads la
 ## Funktionen
 
 - Link einfügen und analysieren
-- Plattform-Erkennung fuer Instagram, TikTok, X/Twitter und Facebook
+- Plattform-Erkennung fuer Instagram, TikTok, X/Twitter, Facebook und YouTube
 - Anzeige von Titel, Thumbnail, Plattform, Dauer, Dateityp und Download-Optionen
 - Video als MP4 speichern
 - Audio als MP3 extrahieren
@@ -114,11 +114,18 @@ Das ist praktisch zum Testen auf dem iPhone, aber kein dauerhaftes Hosting.
 ## API-Endpunkte
 
 - `POST /api/analyze`
-- `POST /api/download-video`
-- `POST /api/download-audio`
+- `POST /api/download-video` (startet einen Download-Job, liefert `{ jobId }`)
+- `POST /api/download-audio` (startet einen Download-Job, liefert `{ jobId }`)
+- `GET /api/jobs/:id/stream` (Live-Fortschritt als Server-Sent-Events)
+- `GET /api/jobs/:id` (Job-Status als Polling-Fallback)
 - `GET /api/gallery`
 - `POST /api/gallery`
 - `DELETE /api/gallery/:id`
+- `GET /api/health` (Diagnose: yt-dlp/ffmpeg-Version, Cookie-Status)
+
+Download und Analyse laufen getrennt: Das Frontend analysiert einmal und gibt
+die Metadaten beim Download mit, damit die Plattform nicht doppelt abgefragt
+wird. Das senkt das Risiko von Rate-Limit-Sperren bei Instagram und Facebook.
 
 Beispiel fuer Analyse:
 
@@ -172,6 +179,59 @@ Die API prueft eingehende URLs:
 - blockiert lokale IPv6-Bereiche
 - erlaubt nur die vorgesehenen Plattformen
 - keine Cookies, Logins oder Umgehungsmechanismen
+
+## Instagram und Facebook: Login-pflichtige Inhalte
+
+Instagram und Facebook verlangen für viele Videos einen eingeloggten Zustand.
+Auf einem Server (z. B. Render) werden Anfragen ohne Cookies fast immer mit
+einer Login- oder Bot-Pruefung blockiert ("Sign in to confirm", Rate-Limit).
+Lokal klappt es haeufiger, aber nicht immer.
+
+Loesung: eigene Cookies hinterlegen. **Nur fuer Inhalte verwenden, an denen du
+die Rechte besitzt oder fuer die der Download erlaubt ist.**
+
+### Cookie-Datei erzeugen
+
+Mit einer Browser-Erweiterung wie "Get cookies.txt LOCALLY" die Cookies fuer
+`instagram.com` bzw. `facebook.com` im Netscape-Format exportieren.
+
+### Lokal
+
+In `.env`:
+
+```env
+YTDLP_COOKIES_FILE=C:\Pfad\zu\cookies.txt
+```
+
+Oder die Cookies direkt aus dem Browser ziehen:
+
+```env
+YTDLP_COOKIES_FROM_BROWSER=chrome
+```
+
+### Render
+
+1. Im Render-Dashboard unter dem Service "Environment" einen **Secret File**
+   anlegen, z. B. `cookies.txt`, mit dem Cookie-Inhalt.
+2. Eine Umgebungsvariable setzen:
+
+```env
+YTDLP_COOKIES_FILE=/etc/secrets/cookies.txt
+```
+
+Alternativ den Cookie-Inhalt direkt als Variable `YTDLP_COOKIES` hinterlegen;
+die App schreibt ihn beim Start in eine temporaere Datei.
+
+Ueber `GET /api/health` laesst sich pruefen, ob Cookies erkannt wurden
+(`cookiesConfigured: true`).
+
+### Weitere Stellschrauben
+
+```env
+DOWNLOAD_TIMEOUT_MS=300000   # Abbruch langer Downloads (Standard 5 Minuten)
+ANALYZE_TIMEOUT_MS=60000     # Timeout fuer die Analyse
+USE_DESKTOP_UA=0             # 1 erzwingt einen Desktop-User-Agent
+```
 
 ## Build
 

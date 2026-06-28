@@ -7,6 +7,7 @@ export default defineConfig({
     proxy: {
       "/api": "http://localhost:5174",
       "/downloads": "http://localhost:5174",
+      "/thumbnails": "http://localhost:5174",
     },
   },
 });
