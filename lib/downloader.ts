@@ -5,7 +5,7 @@ import path from "node:path";
 import { getCookieArgs, hasCookiesConfigured } from "./cookies";
 import { addGalleryItem } from "./galleryStore";
 import { downloadsDir, thumbnailsDir } from "./paths";
-import type { GalleryItem, MediaType, VideoInfo } from "./types";
+import type { GalleryItem, MediaType, Platform, VideoInfo } from "./types";
 import { detectPlatform, validatePublicHttpUrl } from "./urlSafety";
 
 type YtDlpInfo = {
@@ -46,6 +46,19 @@ function commonYtDlpArgs(): string[] {
   return [...getCookieArgs(), ...userAgentArgs(), ...baseYtDlpArgs];
 }
 
+// Plattform-spezifische Zusatzargumente. YouTube blockt Server-IPs gerne mit
+// einer Bot-Pruefung ("Sign in to confirm you're not a bot"). Ein anderer
+// Player-Client (z. B. tv / web_safari) umgeht das oft, da diese Clients
+// weniger streng geprueft werden. Beides ist per Env-Variable anpassbar.
+function platformArgs(platform: Platform): string[] {
+  const extra = process.env.YTDLP_EXTRA_ARGS?.trim() ? process.env.YTDLP_EXTRA_ARGS.trim().split(/\s+/) : [];
+  if (platform === "YouTube") {
+    const clients = process.env.YTDLP_YOUTUBE_PLAYER_CLIENT?.trim() || "default,tv,web_safari";
+    return ["--extractor-args", `youtube:player_client=${clients}`, ...extra];
+  }
+  return extra;
+}
+
 export async function analyzeUrl(input: string): Promise<VideoInfo> {
   const safeUrl = await validatePublicHttpUrl(input);
   const platform = detectPlatform(safeUrl);
@@ -55,7 +68,7 @@ export async function analyzeUrl(input: string): Promise<VideoInfo> {
 
   const output = await runCommand(
     "yt-dlp",
-    [...commonYtDlpArgs(), "--dump-single-json", "--no-playlist", "--skip-download", safeUrl],
+    [...commonYtDlpArgs(), ...platformArgs(platform), "--dump-single-json", "--no-playlist", "--skip-download", safeUrl],
     { timeoutMs: analyzeTimeoutMs },
   );
   const info = JSON.parse(output) as YtDlpInfo;
@@ -88,6 +101,7 @@ export async function downloadMedia(
   const outputTemplate = `${id}.%(ext)s`;
   const downloadArgs = [
     ...commonYtDlpArgs(),
+    ...platformArgs(info.platform),
     "--no-playlist",
     "--force-overwrites",
     "--restrict-filenames",
