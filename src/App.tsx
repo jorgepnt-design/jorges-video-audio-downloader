@@ -264,7 +264,7 @@ export default function App() {
               </span>
               <div>
                 <h2 className="text-xl font-bold text-white">Link analysieren</h2>
-                <p className="text-sm text-slate-400">Instagram, TikTok, X/Twitter, Facebook und YouTube werden erkannt.</p>
+                <p className="text-sm text-slate-400">Instagram, TikTok, X/Twitter, Facebook und YouTube – inkl. Reels und Stories.</p>
               </div>
             </div>
 
