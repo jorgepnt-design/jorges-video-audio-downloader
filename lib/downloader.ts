@@ -432,8 +432,19 @@ function cleanToolError(stderr: string) {
     ? ""
     : " Tipp: Hinterlege eigene Cookies (Umgebungsvariable YTDLP_COOKIES_FILE oder YTDLP_COOKIES), um Inhalte zu laden, für die du angemeldet sein musst.";
 
-  if (normalized.includes("sign in to confirm") || normalized.includes("not a bot") || normalized.includes("confirm you")) {
+  // Wichtig: "confirm you" NICHT pauschal matchen – yt-dlp haengt an viele
+  // Fehler den Satz "Confirm you are on the latest version" an, was sonst
+  // faelschlich als Bot-Pruefung erkannt wuerde.
+  if (
+    normalized.includes("sign in to confirm") ||
+    normalized.includes("not a bot") ||
+    normalized.includes("confirm you're not a bot") ||
+    normalized.includes("confirm you are not a bot")
+  ) {
     return `Die Plattform verlangt eine Login- oder Bot-Prüfung für diesen Inhalt.${cookieHint}`;
+  }
+  if (normalized.includes("cannot parse data")) {
+    return "Dieses Facebook-Video kann von yt-dlp aktuell nicht ausgelesen werden (bekanntes yt-dlp-Problem mit manchen Facebook-Inhalten). Andere Facebook-Videos oder ein direkter Link funktionieren oft trotzdem.";
   }
   if (normalized.includes("rate-limit") || normalized.includes("rate limit") || normalized.includes("429")) {
     return `Die Plattform hat zu viele Anfragen blockiert (Rate-Limit). Warte einen Moment und versuche es erneut.${cookieHint}`;
