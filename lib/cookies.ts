@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
@@ -30,8 +30,21 @@ function resolveCookieFile(): string | null {
 
   const explicitFile = process.env.YTDLP_COOKIES_FILE?.trim();
   if (explicitFile && existsSync(explicitFile)) {
-    cachedCookieFile = explicitFile;
-    return cachedCookieFile;
+    // yt-dlp schreibt die Cookie-Datei am Ende zurück. Render-Secret-Files
+    // (z. B. /etc/secrets/cookies.txt) liegen aber auf einem schreibgeschützten
+    // Dateisystem -> "Read-only file system". Daher kopieren wir die Datei
+    // einmalig in einen beschreibbaren temporären Ordner und nutzen die Kopie.
+    try {
+      const dir = mkdtempSync(path.join(os.tmpdir(), "ytdlp-cookies-"));
+      const file = path.join(dir, "cookies.txt");
+      copyFileSync(explicitFile, file);
+      cachedCookieFile = file;
+      return cachedCookieFile;
+    } catch {
+      // Falls das Kopieren scheitert, notfalls die Originaldatei verwenden.
+      cachedCookieFile = explicitFile;
+      return cachedCookieFile;
+    }
   }
 
   const rawCookies = process.env.YTDLP_COOKIES?.trim();
