@@ -1,5 +1,6 @@
 import {
   AlertTriangle,
+  ClipboardPaste,
   Download,
   FileAudio,
   Film,
@@ -159,6 +160,20 @@ export default function App() {
     }
   }
 
+  async function pasteFromClipboard() {
+    setError("");
+    try {
+      const text = (await navigator.clipboard.readText())?.trim();
+      if (text) {
+        setUrl(text);
+      } else {
+        setError("Die Zwischenablage ist leer. Kopiere zuerst einen Link.");
+      }
+    } catch {
+      setError("Zwischenablage konnte nicht gelesen werden. Bitte den Link manuell einfügen (lange auf das Feld tippen → Einsetzen).");
+    }
+  }
+
   async function analyze(event: FormEvent) {
     event.preventDefault();
     setError("");
@@ -276,15 +291,26 @@ export default function App() {
             </div>
 
             <form onSubmit={analyze} className="flex flex-col gap-3">
-              <input
-                value={url}
-                onChange={(event) => setUrl(event.target.value)}
-                className="min-h-16 rounded-2xl border border-white/10 bg-black/30 px-4 text-base text-white shadow-inner outline-none transition placeholder:text-slate-500 focus:border-cyan-300/70"
-                placeholder="https://www.instagram.com/reel/..."
-                type="url"
-                inputMode="url"
-                required
-              />
+              <div className="flex gap-2">
+                <input
+                  value={url}
+                  onChange={(event) => setUrl(event.target.value)}
+                  className="min-h-16 flex-1 rounded-2xl border border-white/10 bg-black/30 px-4 text-base text-white shadow-inner outline-none transition placeholder:text-slate-500 focus:border-cyan-300/70"
+                  placeholder="https://www.instagram.com/reel/..."
+                  type="url"
+                  inputMode="url"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={pasteFromClipboard}
+                  aria-label="Kopierten Link einfügen"
+                  className="inline-flex min-h-16 shrink-0 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.06] px-4 font-bold text-white transition hover:border-cyan-300/60 hover:bg-cyan-300/10"
+                >
+                  <ClipboardPaste size={20} />
+                  <span className="hidden sm:inline">Einfügen</span>
+                </button>
+              </div>
               <button
                 className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-cyan-300 px-5 font-bold text-slate-950 shadow-lg shadow-cyan-950/30 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={isAnalyzing}
