@@ -201,6 +201,10 @@ export default function App() {
       setProgress(100);
       setGallery((items) => [item, ...items.filter((existing) => existing.id !== item.id)]);
       setSuccess(type === "video" ? "Video wurde gespeichert." : "MP3 wurde gespeichert.");
+      // Analyse-Vorschau schließen, damit das Video nicht doppelt (oben als
+      // Vorschau und unten in der Galerie) erscheint. Eingabefeld freigeben.
+      setVideoInfo(null);
+      setUrl("");
     } catch (err) {
       setError(apiErrorMessage(err));
     } finally {
@@ -219,6 +223,8 @@ export default function App() {
       });
       setGallery((items) => [item, ...items]);
       setSuccess("Eintrag wurde zur Galerie hinzugefügt.");
+      setVideoInfo(null);
+      setUrl("");
     } catch (err) {
       setError(apiErrorMessage(err));
     }
