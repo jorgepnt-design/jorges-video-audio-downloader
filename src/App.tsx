@@ -536,7 +536,8 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
       link.click();
       link.remove();
       URL.revokeObjectURL(objectUrl);
-    } catch {
+    } catch (error) {
+      if (isAbortError(error)) return;
       window.alert("Die Galerie-App kann nicht direkt geöffnet werden. Öffne die Datei und nutze dann die Teilen-Funktion deines Geräts.");
     }
   }
@@ -558,7 +559,8 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
 
       await navigator.clipboard.writeText(new URL(viewUrl, window.location.origin).toString());
       window.alert("Link wurde kopiert. Du kannst ihn jetzt z. B. in WhatsApp einfügen.");
-    } catch {
+    } catch (error) {
+      if (isAbortError(error)) return;
       window.alert("Teilen ist auf diesem Gerät oder Browser nicht verfügbar. Öffne die Datei und nutze die Teilen-Funktion deines Geräts.");
     }
   }
@@ -636,4 +638,10 @@ function safeFileName(title: string) {
 
 function defaultMimeType(type: MediaType) {
   return type === "audio" ? "audio/mpeg" : "video/mp4";
+}
+
+// navigator.share() lehnt mit AbortError ab, wenn das Teilen-Menü abgebrochen wird.
+// Kein instanceof-Check: DOMException erbt in den meisten Engines nicht von Error.
+function isAbortError(error: unknown) {
+  return (error as { name?: string } | null)?.name === "AbortError";
 }
