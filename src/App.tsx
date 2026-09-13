@@ -554,7 +554,7 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
         await navigator.share({
           files: [file],
           title: item.title,
-          text: "Video aus Jorge's Video & Audio Downloader teilen.",
+          text: "",
         });
         return;
       }
@@ -562,7 +562,7 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
       if (navigator.share) {
         await navigator.share({
           title: item.title,
-          text: "Video aus Jorge's Video & Audio Downloader teilen.",
+          text: "",
           url: new URL(viewUrl, window.location.origin).toString(),
         });
         return;
