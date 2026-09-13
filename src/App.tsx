@@ -524,11 +524,7 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
       const file = await getShareFile();
 
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: item.title,
-          text: "Medien-Datei aus Jorge's Video & Audio Downloader öffnen oder speichern.",
-        });
+        await navigator.share({ files: [file] });
         return;
       }
 
@@ -551,20 +547,12 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
     try {
       const file = await getShareFile();
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: item.title,
-          text: "",
-        });
+        await navigator.share({ files: [file] });
         return;
       }
 
       if (navigator.share) {
-        await navigator.share({
-          title: item.title,
-          text: "",
-          url: new URL(viewUrl, window.location.origin).toString(),
-        });
+        await navigator.share({ url: new URL(viewUrl, window.location.origin).toString() });
         return;
       }
 
