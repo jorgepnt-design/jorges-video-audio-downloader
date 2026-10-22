@@ -130,6 +130,10 @@ export default function App() {
   const [downloadState, setDownloadState] = useState<MediaType | null>(null);
   const [progress, setProgress] = useState(0);
   const [stage, setStage] = useState("");
+  // Zuletzt heruntergeladenes Medium, damit nach dem Download der Button
+  // "In Galerie speichern" angeboten werden kann.
+  const [lastDownload, setLastDownload] = useState<GalleryItem | null>(null);
+  const [isSavingToGallery, setIsSavingToGallery] = useState(false);
 
   const filteredGallery = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -179,6 +183,7 @@ export default function App() {
     setError("");
     setSuccess("");
     setVideoInfo(null);
+    setLastDownload(null);
     setIsAnalyzing(true);
     try {
       const info = await requestJson<VideoInfo>("/api/analyze", {
@@ -215,15 +220,40 @@ export default function App() {
       });
       setProgress(100);
       setGallery((items) => [item, ...items.filter((existing) => existing.id !== item.id)]);
-      setSuccess(type === "video" ? "Video wurde gespeichert." : "MP3 wurde gespeichert.");
+      setSuccess(
+        type === "video"
+          ? "Video gespeichert. Tippe auf „Video in Galerie speichern“, um es in deiner Foto-Galerie abzulegen."
+          : "MP3 gespeichert. Tippe auf „Audio in Galerie speichern“, um es auf deinem Gerät zu sichern.",
+      );
       // Analyse-Vorschau schließen, damit das Video nicht doppelt (oben als
-      // Vorschau und unten in der Galerie) erscheint. Eingabefeld freigeben.
+      // Vorschau und unten in der Galerie) erscheint. Stattdessen den Download
+      // merken, um "In Galerie speichern" anzubieten. Eingabefeld freigeben.
       setVideoInfo(null);
+      setLastDownload(item);
       setUrl("");
     } catch (err) {
       setError(apiErrorMessage(err));
     } finally {
       window.setTimeout(() => setDownloadState(null), 600);
+    }
+  }
+
+  async function saveToGallery(item: GalleryItem) {
+    setError("");
+    setSuccess("");
+    setIsSavingToGallery(true);
+    try {
+      await saveItemToGallery(item);
+      setSuccess(
+        item.type === "audio"
+          ? "Wähle im Menü „Sichern“, um das Audio in deiner Galerie abzulegen."
+          : "Wähle im Menü „Video speichern“ bzw. „In Fotos sichern“, um es in deiner Galerie abzulegen.",
+      );
+    } catch (err) {
+      if (isAbortError(err)) return;
+      setError("Speichern in der Galerie nicht möglich. Öffne die Datei und nutze die Teilen-Funktion deines Geräts.");
+    } finally {
+      setIsSavingToGallery(false);
     }
   }
 
@@ -343,6 +373,13 @@ export default function App() {
                 stage={stage}
                 onDownload={downloadMedia}
                 onAdd={addMetadataOnly}
+              />
+            ) : lastDownload ? (
+              <DownloadSuccess
+                item={lastDownload}
+                isSaving={isSavingToGallery}
+                onSave={() => saveToGallery(lastDownload)}
+                onDismiss={() => setLastDownload(null)}
               />
             ) : (
               <div className="flex min-h-80 flex-col items-center justify-center rounded-3xl border border-dashed border-white/10 bg-black/20 p-8 text-center">
@@ -478,6 +515,57 @@ function VideoCard({
   );
 }
 
+function DownloadSuccess({
+  item,
+  isSaving,
+  onSave,
+  onDismiss,
+}: {
+  item: GalleryItem;
+  isSaving: boolean;
+  onSave: () => void;
+  onDismiss: () => void;
+}) {
+  const isAudio = item.type === "audio";
+  return (
+    <div className="flex min-h-80 flex-col gap-4">
+      <div className="overflow-hidden rounded-3xl border border-white/10 bg-black/25">
+        {item.thumbnail ? (
+          <img src={item.thumbnail} alt="" className="aspect-video w-full object-cover" />
+        ) : (
+          <div className="grid aspect-video place-items-center bg-slate-900 text-slate-500">
+            {isAudio ? <FileAudio size={44} /> : <Film size={44} />}
+          </div>
+        )}
+        <div className="p-4">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-semibold text-emerald-200">
+            <ShieldCheck size={14} />
+            {isAudio ? "Audio gespeichert" : "Video gespeichert"}
+          </div>
+          <h2 className="text-xl font-black leading-tight text-white">{item.title}</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-400">
+            Tippe auf den Button, um die Datei direkt in deiner Geräte-Galerie zu sichern.
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={onSave}
+        disabled={isSaving}
+        className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-emerald-300 px-5 font-bold text-slate-950 shadow-lg shadow-emerald-950/30 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {isSaving ? <Loader2 className="animate-spin" /> : <Download />}
+        {isAudio ? "Audio in Galerie speichern" : "Video in Galerie speichern"}
+      </button>
+      <button
+        onClick={onDismiss}
+        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm font-bold text-slate-200 transition hover:bg-white/[0.08]"
+      >
+        Fertig
+      </button>
+    </div>
+  );
+}
+
 function Badge({ children }: { children: string }) {
   return <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-bold text-slate-200">{children}</span>;
 }
@@ -506,36 +594,14 @@ function ActionButton({
 }
 
 function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: string) => void }) {
-  const fileUrl = item.downloadUrl ?? `/${item.filePath.replaceAll("\\", "/")}`;
+  const fileUrl = mediaFileUrl(item);
   const viewUrl = item.viewUrl ?? fileUrl;
-
-  async function getShareFile() {
-    const response = await fetch(fileUrl);
-    if (!response.ok) throw new Error("Download konnte nicht geladen werden.");
-    const blob = await response.blob();
-    const extension = item.type === "audio" ? "mp3" : "mp4";
-    return new File([blob], `${safeFileName(item.title)}.${extension}`, { type: blob.type || defaultMimeType(item.type) });
-  }
 
   async function saveToDevice() {
     if (!item.filePath) return;
 
     try {
-      const file = await getShareFile();
-
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file] });
-        return;
-      }
-
-      const objectUrl = URL.createObjectURL(file);
-      const link = document.createElement("a");
-      link.href = objectUrl;
-      link.download = file.name;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(objectUrl);
+      await saveItemToGallery(item);
     } catch (error) {
       if (isAbortError(error)) return;
       window.alert("Die Galerie-App kann nicht direkt geöffnet werden. Öffne die Datei und nutze dann die Teilen-Funktion deines Geräts.");
@@ -546,7 +612,7 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
     if (!item.filePath) return;
 
     try {
-      const file = await getShareFile();
+      const file = await fetchMediaFile(item);
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file] });
         return;
@@ -626,6 +692,38 @@ function GalleryCard({ item, onDelete }: { item: GalleryItem; onDelete: (id: str
       </div>
     </article>
   );
+}
+
+function mediaFileUrl(item: GalleryItem) {
+  return item.downloadUrl ?? `/${item.filePath.replaceAll("\\", "/")}`;
+}
+
+async function fetchMediaFile(item: GalleryItem): Promise<File> {
+  const response = await fetch(mediaFileUrl(item));
+  if (!response.ok) throw new Error("Download konnte nicht geladen werden.");
+  const blob = await response.blob();
+  const extension = item.type === "audio" ? "mp3" : "mp4";
+  return new File([blob], `${safeFileName(item.title)}.${extension}`, { type: blob.type || defaultMimeType(item.type) });
+}
+
+// Legt die Datei in der Geräte-Galerie ab: auf dem Handy über das native
+// Teilen-/Speichern-Menü ("In Fotos sichern"), sonst per klassischem Download.
+async function saveItemToGallery(item: GalleryItem) {
+  const file = await fetchMediaFile(item);
+
+  if (navigator.canShare?.({ files: [file] })) {
+    await navigator.share({ files: [file] });
+    return;
+  }
+
+  const objectUrl = URL.createObjectURL(file);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = file.name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
 }
 
 function safeFileName(title: string) {
