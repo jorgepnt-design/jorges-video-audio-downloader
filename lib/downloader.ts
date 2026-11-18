@@ -84,7 +84,7 @@ export async function analyzeUrl(input: string): Promise<VideoInfo> {
     { timeoutMs: analyzeTimeoutMs },
   );
 
-  const parsed = output.trim() ? (JSON.parse(output) as YtDlpInfo | null) : null;
+  const parsed = parseYtDlpJson(output);
   if (!parsed) {
     throw new Error(
       "Für diesen Link wurden keine Video-Daten gefunden. Bei Stories ist der Link evtl. abgelaufen oder nicht zugänglich.",
@@ -381,6 +381,41 @@ function toPublicThumbnailPath(absolutePath: string) {
   return `/thumbnails/${path.basename(absolutePath)}`;
 }
 
+// yt-dlp schreibt mit --dump-single-json genau eine JSON-Zeile auf stdout.
+// Manche Extraktoren (v. a. Instagram mit Cookies) geben zusätzlich Text oder
+// Seiteninhalte aus, sodass ein direktes JSON.parse mit "Expected ',' or '}'"
+// scheitert. Wir parsen daher zuerst alles und suchen sonst von hinten die
+// Zeile, die das eigentliche JSON-Objekt enthält.
+function parseYtDlpJson(output: string): YtDlpInfo | null {
+  const trimmed = output.trim();
+  if (!trimmed) return null;
+
+  try {
+    return JSON.parse(trimmed) as YtDlpInfo | null;
+  } catch {
+    // weiter unten zeilenweise versuchen
+  }
+
+  const lines = trimmed.split(/\r?\n/);
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
+    const line = lines[i].trim();
+    if (!line.startsWith("{") || !line.endsWith("}")) continue;
+    try {
+      return JSON.parse(line) as YtDlpInfo;
+    } catch {
+      // nächste Zeile probieren
+    }
+  }
+
+  console.error(
+    `yt-dlp lieferte kein gültiges JSON (${trimmed.length} Zeichen, ${lines.length} Zeilen). Anfang:`,
+    trimmed.slice(0, 500),
+  );
+  throw new Error(
+    "Die Plattform hat eine unerwartete Antwort geliefert. Bitte versuche es erneut oder prüfe, ob der Link öffentlich ist.",
+  );
+}
+
 function runCommand(
   command: string,
   args: string[],
@@ -388,6 +423,10 @@ function runCommand(
 ) {
   return new Promise<string>((resolve, reject) => {
     const child = spawn(command, args, { windowsHide: true });
+    // Als UTF-8 dekodieren, damit Mehrbyte-Zeichen (Emojis in Beschreibungen)
+    // an Chunk-Grenzen nicht zerschnitten werden.
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
     let stdout = "";
     let stderr = "";
     let lineBuffer = "";
