@@ -4,6 +4,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { getCookieArgs, getCookieHeader, hasCookiesConfigured } from "./cookies";
 import { addGalleryItem } from "./galleryStore";
+import { removeDownloadFiles } from "./storageCleanup";
 import { downloadsDir, thumbnailsDir } from "./paths";
 import type { GalleryItem, MediaType, Platform, VideoInfo } from "./types";
 import { detectPlatform, validatePublicHttpUrl } from "./urlSafety";
@@ -151,6 +152,23 @@ export async function downloadMedia(
     "after_move:filepath",
   ];
 
+  try {
+    return await runDownload(id, type, info, downloadArgs, options);
+  } catch (error) {
+    // Teildateien (.part, einzelne Spuren) eines abgebrochenen Downloads
+    // sofort entfernen, sonst läuft der Speicher auf Render voll.
+    await removeDownloadFiles(id);
+    throw error;
+  }
+}
+
+async function runDownload(
+  id: string,
+  type: MediaType,
+  info: VideoInfo,
+  downloadArgs: string[],
+  options: { onProgress?: ProgressHandler },
+): Promise<GalleryItem> {
   const onLine = makeProgressParser(type, options.onProgress);
   let downloadedFile = "";
 

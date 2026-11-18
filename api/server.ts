@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { addMetadataOnly, deleteGalleryItem, ensureStorage, findGalleryItem, readGallery } from "../lib/galleryStore";
 import { downloadsDir, thumbnailsDir } from "../lib/paths";
+import { cleanupStorage } from "../lib/storageCleanup";
 import { analyzeUrl, downloadMedia, getDownloaderDiagnostics } from "../lib/downloader";
 import { createJob, getJob, subscribe, updateJob } from "../lib/jobs";
 import type { MediaType, VideoInfo } from "../lib/types";
@@ -142,15 +143,31 @@ if (process.env.NODE_ENV === "production") {
   app.get(/.*/, (_req, res) => res.sendFile(path.join(distDir, "index.html")));
 }
 
-ensureStorage().then(() => {
-  app.listen(port, () => {
-    console.log(`API server running on http://localhost:${port}`);
+ensureStorage()
+  .catch((error) => console.error("Speicher konnte nicht vorbereitet werden:", error))
+  // Zuerst aufräumen: Ist die Platte voll, scheitern sonst alle Schreibzugriffe.
+  .then(() => cleanupStorage())
+  .then(() => {
+    app.listen(port, () => {
+      console.log(`API server running on http://localhost:${port}`);
+    });
   });
-});
+
+const diskFullMessage =
+  "Der Speicher auf dem Server war voll. Er wurde gerade aufgeräumt – bitte versuche es noch einmal.";
+
+function errorMessage(error: unknown, fallback: string) {
+  const message = error instanceof Error ? error.message : fallback;
+  if ((error as NodeJS.ErrnoException | null)?.code === "ENOSPC" || message.includes("ENOSPC")) {
+    void cleanupStorage();
+    return diskFullMessage;
+  }
+  return message;
+}
 
 function sendError(res: express.Response, error: unknown) {
-  const message = error instanceof Error ? error.message : "Unerwarteter Serverfehler.";
-  console.error(message);
+  const message = errorMessage(error, "Unerwarteter Serverfehler.");
+  console.error(error instanceof Error ? error.message : error);
   res.status(400).json({ error: message });
 }
 
@@ -168,16 +185,19 @@ function startDownloadJob(req: express.Request, res: express.Response, type: Med
 
   // Download läuft im Hintergrund; der Fortschritt wird über den Job-Stream
   // ausgeliefert. Fehler landen im Job-Status statt in der HTTP-Antwort.
-  void downloadMedia(url, type, {
-    providedInfo,
-    onProgress: ({ progress, stage }) => updateJob(job.id, { progress, stage }),
-  })
+  void cleanupStorage()
+    .then(() =>
+      downloadMedia(url, type, {
+        providedInfo,
+        onProgress: ({ progress, stage }) => updateJob(job.id, { progress, stage }),
+      }),
+    )
     .then((item) => {
       updateJob(job.id, { status: "done", progress: 100, stage: "Fertig", item });
     })
     .catch((error: unknown) => {
-      const message = error instanceof Error ? error.message : "Download fehlgeschlagen.";
-      console.error(message);
+      const message = errorMessage(error, "Download fehlgeschlagen.");
+      console.error(error instanceof Error ? error.message : error);
       updateJob(job.id, { status: "error", error: message, stage: "Fehler" });
     });
 }
